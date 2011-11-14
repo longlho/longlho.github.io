@@ -1,0 +1,48 @@
+@charset "utf-8";
+/* CSS Document */
+
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	background-color: #F9F9F9;
+}
+/* GLOBAL STUFF */
+div.modal {
+	display: none;
+}
+
+div.notification {
+	font-size: 12px;
+}
+
+/* Logo */
+.logo {
+	background: url(../images/lafayette.png) no-repeat;
+	display: block;
+}
+
+/* General styling */
+input[type='text'], input[type='password'] {
+	border: 1px solid #CCC;
+}
+
+/* Footer */
+footer {
+	margin: 10px auto auto auto;
+	font-size: 11px;
+}
+
+footer span.copyright {
+	float: left;
+}
+
+footer span.links {
+	list-style-type: none;
+	margin: 0px;
+	float: right;
+}
+
+footer span.links a {
+	text-decoration: none;
+}
+
+
