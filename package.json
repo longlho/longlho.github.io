@@ -1,0 +1,22 @@
+{
+  "author": "Long Ho <holevietlong@gmail.com> (http://www.azndezign.com)",
+  "name": "azndezign.com",
+  "description": "My personal site",
+  "version": "0.1.0",
+  "homepage": "http://www.azndezign.com",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/longlho/longlho.github.com.git"
+  },
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "engines": {
+    "node": "~0.6.0"
+  },
+  "dependencies": {
+    "express" : "latest"
+  },
+  "devDependencies": {}
+}

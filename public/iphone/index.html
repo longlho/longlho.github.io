@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>Long Ho's Website</title>
+    <!--[if IE]><script>document.write('<base href="' + location.protocol + '//' + location.host + location.pathname.replace(/\/[^\/]*$/, '/mobile/') + '"/>')</script><![endif]-->
+    <base href="mobile/">
+    <script id="DC_baseScript">if(navigator.userAgent.indexOf('AppleWebKit/') == -1) document.write('<base href="' + location.protocol + '//' + location.host + location.pathname.replace(/\/[^\/]*$/, '/mobile/') + '"/>')</script>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.6">
+    <meta name="apple-mobile-web-app-capable" content="YES">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="Images/WebClipIcon.png">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="../Parts/Transitions.css">
+    <script type="text/javascript" src="Parts/parts.js" charset="utf-8"></script>
+    <script type="text/javascript" src="main.js" charset="utf-8"></script>
+</head>
+<body onload="load();">
+    <div id="browser">
+        <div id="header">
+            <div id="back_button" class="back_button_template dashcode-header-backbutton"></div>
+        </div>
+        <div id="stackLayout">
+            <div id="main">
+                <div id="navigation">
+                    <div id="profileCell" onclick="gotoProfile(event)">
+                        <div id="profileText"></div>
+                        <div id="profileImg"><img src="../Images/Brothers-in-Arms.png" id="inner_image2"></div>
+                    </div>
+                    <div id="portfolioCell" onclick="gotoPortfolio(event)">
+                        <div id="portfolioText"></div>
+                        <div id="portfolioImg"><img src="../Images/Categories.png" id="inner_image"></div>
+                    </div>
+                    <div id="resumeCell" onclick="gotoResume(event)">
+                        <div id="resumeText"></div>
+                        <div id="resumeImg"><img src="../Images/Contacts.png" id="inner_image1"></div>
+                    </div>
+                    <div id="linksCell" onclick="gotoLinks(event)">
+                        <div id="linksText"></div>
+                        <div id="linksImg"><img src="../Images/iRAL.png" id="inner_image3"></div>
+                    </div>
+                    <div id="contactCell" onclick="emailMe(event)">
+                        <div id="image"><img src="../Images/Mail.png" id="inner_image4"></div>
+                        <div id="contactText"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="detail">
+                <div id="profileContent" class="detail">
+                    <div id="title"></div>
+                    <div id="subtitle"></div>
+                    <div id="desc"></div>
+                </div>
+                <div id="portfolioStack" class="detail"><div id="view1" class="list">
+                        <div id="text"></div>
+                        <ul id="ongoingList">
+                            <li id="ongoingListRow" class="ongoingListRow_template first" style="border-top-width: 0px; " onclick="gotoProject(event)">
+                                <div id="label" class="label_template"></div>
+                                <div id="arrow" class="arrow_template">
+                                </div>
+                            </li>
+                        </ul>
+                        <div id="text1"></div>
+                        <ul id="pastList">
+                            <li id="pastListRow" class="pastListRow_template first" style="border-top-width: 0px; ">
+                                <div id="label1" class="label1_template"></div>
+                                <div id="arrow1" class="arrow1_template">
+                                </div>
+                            </li>
+                        </ul>
+                    </div><div id="view2" class="view">
+                        <div id="text2" class="title"></div>
+                        <div id="box" class="content"></div>
+                    </div></div>
+                <div id="resumeContent">
+                    <div id="text3"></div>
+                    <div id="box1">
+                        <div id="text4"></div>
+                    </div>
+                    <div id="text5"></div>
+                    <div id="box2">
+                        <div id="text6"></div>
+                    </div>
+                    <div id="text7"></div>
+                    <div id="box3">
+                        <div id="text8"></div>
+                        <div id="text9"></div>
+                        <div id="text10"></div>
+                        <div id="text11"></div>
+                    </div>
+                    <div id="text12"></div>
+                    <div id="box4">
+                        <div id="text14"></div>
+                        <div id="text15"></div>
+                        <div id="text17"></div>
+                        <div id="text16"></div>
+                    </div>
+                    <div id="text13"></div>
+                    <div id="box5">
+                        <div id="text18"></div>
+                        <div id="text19"></div>
+                        <div id="text20"></div>
+                        <div id="text21"></div>
+                    </div>
+                </div>
+                <div id="linksContent">
+                    <div id="text22"></div>
+                    <ul id="list">
+                        <li id="listRowTemplate" class="listRowTemplate_template first" style="border-top-width: 0px; " onclick="gotoLink(event)">
+                            <div id="label2" class="label2_template"></div>
+                            <div id="arrow2" class="arrow2_template">
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

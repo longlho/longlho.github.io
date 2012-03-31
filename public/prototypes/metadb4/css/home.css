@@ -1,0 +1,90 @@
+nav {
+	background-color: white;
+	height: 45px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	z-index: -1;
+	padding-top: 5px;
+	box-shadow: 0px 1px 10px #999;
+}
+
+span.logo {
+	margin-left: 50px;
+	width: 220px;
+	height: 50px;
+	display: inline-block;
+	position: relative;
+	z-index: -1;
+	float: left;
+	top: -5px;
+	opacity: 0.2;
+	background-position-y: -70px;
+}
+
+.title {
+	color: #7C0023;
+	font-size: 40px;
+	margin-left: -70px;
+	letter-spacing: -2px;
+	font-weight: bold;
+}
+
+nav input.search {
+	position: relative;
+	top: -10px;
+	display: inline-block;
+	width: 250px;
+	height: 30px;
+	padding: 0px 5px 0px 5px;
+	color: #CCC;
+	margin-left: 30px;
+}
+
+nav input.search:focus {
+	box-shadow: 0px 0px 10px #DDD;
+	border: 1px solid #AAA;
+	color: #222;
+}
+
+nav span.search-icon {
+	height: 17px;
+	position: relative;
+	display: inline-block;
+	top: -5px;
+	left: -25px;
+	border-left: 1px solid #BBB;
+}
+
+nav select {
+	position: relative;
+	top: -10px;
+	left: -15px;
+	height: 30px;
+}
+
+span.menu {
+	position: relative;
+	top: 9px;
+	font-size: 20px;
+	float: right;
+	margin-right: 20px;
+}
+
+span.menu a {
+	cursor: pointer;
+	padding: 5px;
+	margin-left: 5px;
+	color: #006690;
+	text-decoration: none;
+}
+
+span.menu a:hover {
+	color: #0AB6FF;
+	text-decoration: underline;
+}
+
+#main {
+	margin-top: 70px;
+}
