@@ -55,7 +55,8 @@ js_binary(
         ":node_modules/vscode-uri",
         ":site_sources",
     ],
-    entry_point = "tools/bazel/build_site.mjs",
+    entry_point = "tools/bazel/build_site.ts",
+    node_options = ["--experimental-transform-types"],
 )
 
 js_run_binary(

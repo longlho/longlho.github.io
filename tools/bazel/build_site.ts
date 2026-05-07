@@ -6,10 +6,32 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import { build as viteBuild } from "vite";
 
+type CopyOptions = {
+  exclude: Set<string>;
+};
+
+type RenderedPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  dateLabel: string;
+  html: string;
+};
+
+type Frontmatter = {
+  date?: string | Date;
+  description?: unknown;
+  excerpt?: unknown;
+  slug?: unknown;
+  summary?: unknown;
+  title?: unknown;
+};
+
 const outputDir = process.argv[2] ? await resolveOutputDir(process.argv[2]) : "";
 
 if (!outputDir) {
-  throw new Error("Usage: build_site.mjs <output-dir>");
+  throw new Error("Usage: build_site.ts <output-dir>");
 }
 
 const packageRoot = await findPackageRoot();
@@ -71,7 +93,7 @@ await prerenderRoutes(
 await fs.rm(outputDir, { force: true, recursive: true });
 await copyTree(buildOutputDir, outputDir, { exclude: new Set() });
 
-async function findPackageRoot() {
+async function findPackageRoot(): Promise<string> {
   const candidates = [
     process.cwd(),
     path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."),
@@ -87,7 +109,7 @@ async function findPackageRoot() {
   throw new Error("Could not locate package.json for site build inputs.");
 }
 
-async function resolveOutputDir(outputPath) {
+async function resolveOutputDir(outputPath: string): Promise<string> {
   if (path.isAbsolute(outputPath)) {
     return outputPath;
   }
@@ -104,7 +126,7 @@ async function resolveOutputDir(outputPath) {
   return path.join(execroot, outputPath);
 }
 
-async function walkUpFor(start, marker) {
+async function walkUpFor(start: string, marker: string): Promise<string> {
   let current = path.resolve(start);
 
   while (true) {
@@ -120,7 +142,7 @@ async function walkUpFor(start, marker) {
   }
 }
 
-async function copyTree(source, destination, { exclude }) {
+async function copyTree(source: string, destination: string, { exclude }: CopyOptions): Promise<void> {
   await fs.mkdir(destination, { recursive: true });
 
   for (const entry of await fs.readdir(source, { withFileTypes: true })) {
@@ -141,7 +163,7 @@ async function copyTree(source, destination, { exclude }) {
   }
 }
 
-async function copySymlinkTarget(sourcePath, destinationPath, { exclude }) {
+async function copySymlinkTarget(sourcePath: string, destinationPath: string, { exclude }: CopyOptions): Promise<void> {
   const realPath = await fs.realpath(sourcePath);
   const targetStat = await fs.stat(realPath);
 
@@ -152,7 +174,7 @@ async function copySymlinkTarget(sourcePath, destinationPath, { exclude }) {
   }
 }
 
-async function linkNodeModules(sourceRoot, destinationRoot) {
+async function linkNodeModules(sourceRoot: string, destinationRoot: string): Promise<void> {
   const nodeModulesPath = path.join(sourceRoot, "node_modules");
 
   if (await fileExists(nodeModulesPath)) {
@@ -160,12 +182,12 @@ async function linkNodeModules(sourceRoot, destinationRoot) {
   }
 }
 
-async function renderPosts(postsDir, generatedDir) {
+async function renderPosts(postsDir: string, generatedDir: string): Promise<void> {
   const files = await collectMarkdownFiles(postsDir);
-  const posts = await Promise.all(
+  const posts: RenderedPost[] = await Promise.all(
     files.map(async (filePath) => {
       const raw = await fs.readFile(filePath, "utf8");
-      const { content, data } = matter(raw);
+      const { content, data } = matter(raw) as { content: string; data: Frontmatter };
       const markdownTitle = getLeadingMarkdownTitle(content);
       const body = markdownTitle ? stripLeadingMarkdownTitle(content) : content;
       const html = await marked.parse(body);
@@ -213,7 +235,7 @@ export const posts: Post[] = ${JSON.stringify(
   await fs.writeFile(path.join(generatedDir, "post-slugs.json"), `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
 }
 
-async function collectMarkdownFiles(dir) {
+async function collectMarkdownFiles(dir: string): Promise<string[]> {
   if (!(await fileExists(dir))) {
     return [];
   }
@@ -238,8 +260,8 @@ async function collectMarkdownFiles(dir) {
   return nestedFiles.flat();
 }
 
-async function prerenderRoutes(distIndexPath, slugsPath, postsOutputDir) {
-  const slugs = JSON.parse(await fs.readFile(slugsPath, "utf8"));
+async function prerenderRoutes(distIndexPath: string, slugsPath: string, postsOutputDir: string): Promise<void> {
+  const slugs = JSON.parse(await fs.readFile(slugsPath, "utf8")) as string[];
   const indexHtml = await fs.readFile(distIndexPath, "utf8");
 
   await Promise.all(
@@ -251,7 +273,7 @@ async function prerenderRoutes(distIndexPath, slugsPath, postsOutputDir) {
   );
 }
 
-async function fileExists(filePath) {
+async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
     return true;
@@ -260,7 +282,7 @@ async function fileExists(filePath) {
   }
 }
 
-function escapeHtml(value) {
+function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -269,15 +291,15 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function getLeadingMarkdownTitle(content) {
+function getLeadingMarkdownTitle(content: string): string {
   return content.match(/^\s*#\s+(.+?)\s*$/m)?.[1]?.trim() ?? "";
 }
 
-function stripLeadingMarkdownTitle(content) {
+function stripLeadingMarkdownTitle(content: string): string {
   return content.replace(/^\s*#\s+.+?\s*(?:\r?\n|$)/, "").trimStart();
 }
 
-function getExcerpt(data, html) {
+function getExcerpt(data: Frontmatter, html: string): string {
   const frontmatterExcerpt = data.excerpt || data.description || data.summary;
 
   if (frontmatterExcerpt) {
@@ -288,11 +310,11 @@ function getExcerpt(data, html) {
   return stripHtml(firstParagraph).slice(0, 180);
 }
 
-function stripHtml(value) {
+function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 }
 
-function slugify(value) {
+function slugify(value: string): string {
   return value
     .toLowerCase()
     .trim()
@@ -300,7 +322,7 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function formatDate(date) {
+function formatDate(date: string): string {
   if (!date) {
     return "";
   }
