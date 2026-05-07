@@ -1,17 +1,14 @@
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
-import { collectMermaidDiagrams, hashMermaidSource, renderMermaidManifest } from "../tools/mermaid/render_manifest.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const postsDir = path.join(root, "posts");
 const generatedDir = path.join(root, "src", "generated");
 const generatedPostsPath = path.join(generatedDir, "posts.ts");
 const generatedSlugsPath = path.join(generatedDir, "post-slugs.json");
-let mermaidSvgs = new Map();
 
 const escapeHtml = (value) =>
   value
@@ -225,12 +222,7 @@ const renderCodeBlock = (token) => {
 
   if (language === "mermaid") {
     const source = token.text.trim();
-    const hash = hashMermaidSource(source);
-    const renderedSvg = mermaidSvgs.get(hash);
-    if (!renderedSvg) {
-      throw new Error(`Missing pre-rendered Mermaid SVG for ${hash}.`);
-    }
-    return `<figure class="mermaid-diagram">${renderedSvg}</figure>`;
+    return `<figure class="mermaid-diagram"><pre class="mermaid">${escapeHtml(source)}</pre></figure>`;
   }
 
   const languageClass = language ? ` language-${language}` : "";
@@ -319,23 +311,6 @@ const formatDate = (date) => {
 
 const renderPosts = async () => {
   const files = await collectMarkdownFiles(postsDir);
-  const diagrams = new Map();
-
-  for (const filePath of files) {
-    const raw = await fs.readFile(filePath, "utf8");
-    for (const [hash, source] of collectMermaidDiagrams(raw)) {
-      diagrams.set(hash, source);
-    }
-  }
-
-  const mermaidOutputDir = await fs.mkdtemp(path.join(os.tmpdir(), "site-mermaid-"));
-  const manifest = await renderMermaidManifest({ outputDir: mermaidOutputDir, sources: diagrams });
-  mermaidSvgs = new Map(
-    await Promise.all(
-      Object.entries(manifest).map(async ([hash, fileName]) => [hash, await fs.readFile(path.join(mermaidOutputDir, fileName), "utf8")]),
-    ),
-  );
-
   const posts = await Promise.all(
     files.map(async (filePath) => {
       const raw = await fs.readFile(filePath, "utf8");
@@ -383,7 +358,6 @@ export const posts: Post[] = ${JSON.stringify(posts, null, 2)};
 `,
   );
   await fs.writeFile(generatedSlugsPath, `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
-  await fs.rm(mermaidOutputDir, { force: true, recursive: true });
 };
 
 await renderPosts();

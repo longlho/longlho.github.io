@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { build as viteBuild } from "vite";
-import { hashMermaidSource } from "../mermaid/render_manifest.ts";
 
 type CopyOptions = {
   exclude: Set<string>;
@@ -92,11 +91,9 @@ languageKeywords.tsx = languageKeywords.ts;
 const outputDir = process.argv[2] ? await resolveOutputDir(process.argv[2]) : "";
 
 if (!outputDir) {
-  throw new Error("Usage: build_site.ts <output-dir> [mermaid-svg-dir]");
+  throw new Error("Usage: build_site.ts <output-dir>");
 }
 
-const mermaidSvgDir = process.argv[3] ? await resolveInputDir(process.argv[3]) : "";
-const mermaidSvgs = mermaidSvgDir ? await loadMermaidSvgs(mermaidSvgDir) : new Map<string, string>();
 const packageRoot = await findPackageRoot();
 const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "site-build-"));
 const buildOutputDir = path.join(workspaceDir, "dist");
@@ -183,23 +180,6 @@ async function resolveOutputDir(outputPath: string): Promise<string> {
   }
 
   return path.join(execroot, outputPath);
-}
-
-async function resolveInputDir(inputPath: string): Promise<string> {
-  if (path.isAbsolute(inputPath)) {
-    return inputPath;
-  }
-
-  if (!inputPath.startsWith("bazel-out/")) {
-    return path.resolve(inputPath);
-  }
-
-  const execroot = await walkUpFor(process.cwd(), "bazel-out");
-  if (!execroot) {
-    return path.resolve(inputPath);
-  }
-
-  return path.join(execroot, inputPath);
 }
 
 async function walkUpFor(start: string, marker: string): Promise<string> {
@@ -510,31 +490,11 @@ function renderCodeBlock(token: { lang?: string; text: string }): string {
 
   if (language === "mermaid") {
     const source = token.text.trim();
-    const hash = hashMermaidSource(source);
-    const renderedSvg = mermaidSvgs.get(hash);
-    if (!renderedSvg) {
-      throw new Error(`Missing pre-rendered Mermaid SVG for ${hash}.`);
-    }
-    return `<figure class="mermaid-diagram">${renderedSvg}</figure>`;
+    return `<figure class="mermaid-diagram"><pre class="mermaid">${escapeHtml(source)}</pre></figure>`;
   }
 
   const languageClass = language ? ` language-${language}` : "";
   return `<pre class="code-block"><code class="${languageClass.trim()}">${highlightCode(token.text, language)}</code></pre>`;
-}
-
-async function loadMermaidSvgs(svgDir: string): Promise<Map<string, string>> {
-  const manifestPath = path.join(svgDir, "manifest.json");
-
-  if (!(await fileExists(manifestPath))) {
-    throw new Error(`Missing Mermaid SVG manifest at ${manifestPath}.`);
-  }
-
-  const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as Record<string, string>;
-  const entries = await Promise.all(
-    Object.entries(manifest).map(async ([hash, fileName]) => [hash, await fs.readFile(path.join(svgDir, fileName), "utf8")] as const),
-  );
-
-  return new Map(entries);
 }
 
 function getLeadingMarkdownTitle(content: string): string {

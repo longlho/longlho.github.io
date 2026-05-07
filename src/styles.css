@@ -449,6 +449,44 @@ h3 {
   background: #1a1d1a;
 }
 
+.post-page .mermaid {
+  margin: 0;
+  color: var(--heading);
+  white-space: pre;
+}
+
+.post-page .mermaid-diagram foreignObject {
+  overflow: visible;
+}
+
+.post-page .mermaid-diagram .label,
+.post-page .mermaid-diagram .nodeLabel {
+  color: inherit;
+}
+
+.post-page .mermaid-diagram .label p,
+.post-page .mermaid-diagram .nodeLabel p {
+  margin: 0;
+  color: inherit;
+}
+
+.post-page .mermaid-diagram .edgeLabel,
+.post-page .mermaid-diagram .messageText,
+.post-page .mermaid-diagram .actor,
+.post-page .mermaid-diagram .titleText,
+.post-page .mermaid-diagram .legend text {
+  color: var(--heading);
+  fill: var(--heading);
+}
+
+.post-page .mermaid-diagram .edgeLabel,
+.post-page .mermaid-diagram .labelBkg,
+.post-page .mermaid-diagram .edgeLabel rect,
+.post-page .mermaid-diagram .label rect {
+  background: #1a1d1a;
+  fill: #1a1d1a;
+}
+
 .post-page .mermaid-toolbar {
   position: absolute;
   z-index: 2;

@@ -1,4 +1,5 @@
 import { posts } from "./generated/posts";
+import mermaid from "mermaid";
 import "./styles.css";
 
 type Focus = {
@@ -39,6 +40,32 @@ const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
   throw new Error("Missing #app root element");
 }
+
+mermaid.initialize({
+  deterministicIds: true,
+  fontFamily:
+    'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  securityLevel: "strict",
+  startOnLoad: false,
+  theme: "base",
+  themeVariables: {
+    background: "#1a1d1a",
+    darkMode: true,
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    lineColor: "#8f9f94",
+    mainBkg: "#20271f",
+    nodeBorder: "rgba(243, 234, 216, 0.34)",
+    primaryBorderColor: "rgba(243, 234, 216, 0.34)",
+    primaryColor: "#20271f",
+    primaryTextColor: "#fff7e8",
+    secondaryColor: "#263128",
+    secondaryTextColor: "#fff7e8",
+    tertiaryColor: "#1a1d1a",
+    tertiaryTextColor: "#fff7e8",
+    textColor: "#fff7e8",
+  },
+});
 
 const externalAttrs = (href: string) =>
   href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : "";
@@ -185,7 +212,7 @@ const renderPostPage = (slug: string) => {
 
 const match = window.location.pathname.match(/^\/posts\/([^/]+)\/?$/);
 
-app.innerHTML = match ? renderPostPage(match[1]) : renderHome();
+app.innerHTML = match ? renderPostPage(match[1]!) : renderHome();
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -260,7 +287,7 @@ const setupMermaidDiagrams = () => {
     figure.prepend(toolbar);
 
     stage.addEventListener("pointerdown", (event) => {
-      if (scale <= 1) {
+      if (scale <= baseScale) {
         return;
       }
 
@@ -295,4 +322,14 @@ const setupMermaidDiagrams = () => {
   });
 };
 
+const renderMermaidDiagrams = async () => {
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>(".mermaid"));
+  if (nodes.length === 0) {
+    return;
+  }
+
+  await mermaid.run({ nodes });
+};
+
+await renderMermaidDiagrams();
 setupMermaidDiagrams();
