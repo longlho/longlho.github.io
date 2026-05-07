@@ -97,37 +97,24 @@ const renderHome = () => `
   ${renderHeader()}
 
   <main>
+    <section class="writing-section writing-section-lead" id="writing" aria-labelledby="writing-title">
+      <div class="section-heading">
+        <p class="eyebrow">Articles</p>
+        <h1 id="writing-title" class="writing-title">Technical notes on frontend systems, build graphs, and product infrastructure.</h1>
+      </div>
+      ${renderPostList()}
+    </section>
+
     <section class="hero" aria-labelledby="intro-title">
       <div class="hero-copy">
-        <p class="eyebrow">Frontend infrastructure and product engineering</p>
-        <h1 id="intro-title">I build web systems that stay understandable as they get large.</h1>
+        <p class="eyebrow">Long Ho</p>
+        <h2 id="intro-title">I write about the engineering work behind durable web products.</h2>
         <p class="lede">
-          I care about the places where product work meets infrastructure: package graphs,
-          build tools, runtime boundaries, type systems, and the small workflow choices that
-          decide whether a team can keep moving.
+          The notes here sit where product work meets infrastructure: package graphs,
+          runtime boundaries, type systems, build tools, and the small workflow choices
+          that decide whether a team can keep moving.
         </p>
-        <div class="hero-actions">
-          <a class="button primary" href="#writing">Read notes</a>
-          <a class="button secondary" href="mailto:holevietlong@gmail.com">Get in touch</a>
-        </div>
       </div>
-      <aside class="hero-panel" aria-label="Current focus">
-        <div>
-          <span>01</span>
-          <strong>Build systems</strong>
-          <p>Selective builds, explicit dependencies, and generated metadata.</p>
-        </div>
-        <div>
-          <span>02</span>
-          <strong>Frontend runtime</strong>
-          <p>Shared browser, webview, and desktop capabilities with fewer one-off integrations.</p>
-        </div>
-        <div>
-          <span>03</span>
-          <strong>Product craft</strong>
-          <p>Interfaces that feel fast, direct, and maintainable after the first launch.</p>
-        </div>
-      </aside>
     </section>
 
     <section class="band" aria-labelledby="work-title">
@@ -147,17 +134,9 @@ const renderHome = () => `
                 </ul>
               </article>
             `,
-          )
-          .join("")}
+        )
+        .join("")}
       </div>
-    </section>
-
-    <section class="writing-section" id="writing" aria-labelledby="writing-title">
-      <div class="section-heading">
-        <p class="eyebrow">Writing</p>
-        <h2 id="writing-title">Posts from the parts of engineering that do not fit in a commit</h2>
-      </div>
-      ${renderPostList()}
     </section>
   </main>
 
@@ -214,16 +193,17 @@ const renderMermaidDiagrams = async () => {
     securityLevel: "strict",
     theme: "base",
     themeVariables: {
-      background: "#fffaf0",
+      background: "#24251f",
+      darkMode: true,
       fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-      lineColor: "#65756f",
-      mainBkg: "#fffaf0",
-      primaryBorderColor: "#65756f",
-      primaryColor: "#e7eddc",
-      primaryTextColor: "#14201d",
-      secondaryBorderColor: "#8f4f32",
-      secondaryColor: "#f6f1e8",
-      tertiaryColor: "#fffaf0",
+      lineColor: "#8f9f94",
+      mainBkg: "#1d211e",
+      primaryBorderColor: "#8f9f94",
+      primaryColor: "#24362d",
+      primaryTextColor: "#fff7e8",
+      secondaryBorderColor: "#f0a36a",
+      secondaryColor: "#2b2822",
+      tertiaryColor: "#24251f",
     },
   });
 
