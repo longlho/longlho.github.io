@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 2: The Anatomy Of A Frontend Package
 
 A frontend package is rarely just a folder of TypeScript files.

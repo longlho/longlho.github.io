@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 3: Typechecking And Dependency Hygiene
 
 Most TypeScript projects start with one command:

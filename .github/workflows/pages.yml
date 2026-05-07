@@ -27,6 +27,8 @@ jobs:
           repository-cache: true
       - run: bazel test //:typecheck //:gazelle.check --lockfile_mode=error
       - run: bazel build //:site --lockfile_mode=error
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
       - name: Prepare Pages artifact
         run: |
           mkdir -p pages-dist

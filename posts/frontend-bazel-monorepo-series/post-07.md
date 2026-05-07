@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 7: Bazel vs Turborepo vs Nx
 
 Tool comparisons get annoying because they often ask the wrong question.

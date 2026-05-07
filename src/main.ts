@@ -46,6 +46,9 @@ const externalAttrs = (href: string) =>
 const renderLinks = () =>
   links.map((link) => `<a href="${link.href}" ${externalAttrs(link.href)}>${link.label}</a>`).join("");
 
+const renderPostDate = (post: { date: string; dateLabel: string }) =>
+  post.date ? `<time datetime="${post.date}">${post.dateLabel}</time>` : "";
+
 const renderHeader = () => `
   <header class="site-header" aria-label="Primary">
     <a class="wordmark" href="/" aria-label="Long Ho home">Long Ho</a>
@@ -83,7 +86,10 @@ const renderPostList = () => {
         .map(
           (post) => `
             <a class="writing-row" href="/posts/${post.slug}/">
-              <span>${post.title}</span>
+              <span>
+                ${renderPostDate(post)}
+                <strong>${post.title}</strong>
+              </span>
               <p>${post.excerpt}</p>
             </a>
           `,
@@ -168,7 +174,7 @@ const renderPostPage = (slug: string) => {
     <main class="post-shell">
       <article class="post-page">
         <a class="back-link" href="/#writing">Back to writing</a>
-        <p class="eyebrow">${post.dateLabel || "Writing"}</p>
+        ${post.date ? `<time class="eyebrow" datetime="${post.date}">${post.dateLabel}</time>` : '<p class="eyebrow">Writing</p>'}
         <h1>${post.title}</h1>
         ${post.html}
       </article>
@@ -181,33 +187,112 @@ const match = window.location.pathname.match(/^\/posts\/([^/]+)\/?$/);
 
 app.innerHTML = match ? renderPostPage(match[1]) : renderHome();
 
-const renderMermaidDiagrams = async () => {
-  if (!document.querySelector(".mermaid")) {
-    return;
-  }
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-  const { default: mermaid } = await import("mermaid");
+const setupMermaidDiagrams = () => {
+  const figures = document.querySelectorAll<HTMLElement>(".mermaid-diagram");
 
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    theme: "base",
-    themeVariables: {
-      background: "#24251f",
-      darkMode: true,
-      fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-      lineColor: "#8f9f94",
-      mainBkg: "#1d211e",
-      primaryBorderColor: "#8f9f94",
-      primaryColor: "#24362d",
-      primaryTextColor: "#fff7e8",
-      secondaryBorderColor: "#f0a36a",
-      secondaryColor: "#2b2822",
-      tertiaryColor: "#24251f",
-    },
+  figures.forEach((figure, index) => {
+    const svg = figure.querySelector<SVGSVGElement>("svg");
+    if (!svg || figure.querySelector(".mermaid-toolbar")) {
+      return;
+    }
+
+    svg.classList.add("mermaid-svg");
+    if (svg.viewBox.baseVal.width > 0) {
+      svg.style.width = `${svg.viewBox.baseVal.width}px`;
+    }
+
+    const stage = document.createElement("div");
+    const canvas = document.createElement("div");
+    const toolbar = document.createElement("div");
+    let baseScale = 1;
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let panStart: { x: number; y: number; translateX: number; translateY: number } | null = null;
+
+    stage.className = "mermaid-stage";
+    canvas.className = "mermaid-canvas";
+    toolbar.className = "mermaid-toolbar";
+    toolbar.setAttribute("aria-label", `Diagram ${index + 1} controls`);
+
+    svg.replaceWith(stage);
+    stage.append(canvas);
+    canvas.append(svg);
+    baseScale = clamp((stage.clientWidth - 48) / Math.max(svg.viewBox.baseVal.width, 1), 0.35, 1);
+    scale = baseScale;
+
+    const updateTransform = () => {
+      canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      figure.dataset.zoomed = scale > baseScale ? "true" : "false";
+    };
+
+    const zoomBy = (delta: number) => {
+      scale = clamp(Number((scale + delta).toFixed(2)), baseScale, 2.5);
+      if (scale <= baseScale) {
+        translateX = 0;
+        translateY = 0;
+      }
+      updateTransform();
+    };
+
+    const reset = () => {
+      scale = baseScale;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    };
+
+    const addButton = (label: string, title: string, onClick: () => void) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.title = title;
+      button.setAttribute("aria-label", title);
+      button.addEventListener("click", onClick);
+      toolbar.append(button);
+    };
+
+    addButton("+", "Zoom in", () => zoomBy(0.25));
+    addButton("-", "Zoom out", () => zoomBy(-0.25));
+    addButton("Fit", "Fit diagram", reset);
+    figure.prepend(toolbar);
+
+    stage.addEventListener("pointerdown", (event) => {
+      if (scale <= 1) {
+        return;
+      }
+
+      panStart = {
+        x: event.clientX,
+        y: event.clientY,
+        translateX,
+        translateY,
+      };
+      stage.setPointerCapture(event.pointerId);
+    });
+
+    stage.addEventListener("pointermove", (event) => {
+      if (!panStart) {
+        return;
+      }
+
+      translateX = panStart.translateX + event.clientX - panStart.x;
+      translateY = panStart.translateY + event.clientY - panStart.y;
+      updateTransform();
+    });
+
+    stage.addEventListener("pointerup", () => {
+      panStart = null;
+    });
+
+    stage.addEventListener("pointercancel", () => {
+      panStart = null;
+    });
+
+    updateTransform();
   });
-
-  await mermaid.run({ querySelector: ".mermaid" });
 };
 
-void renderMermaidDiagrams();
+setupMermaidDiagrams();

@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 6: Verifying And Deploying Frontend Artifacts
 
 A successful bundle is not the same thing as a correct artifact.

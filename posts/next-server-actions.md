@@ -1,3 +1,7 @@
+---
+date: 2026-05-07
+---
+
 # Next Server Actions Are Not An API Boundary
 
 Server Actions are one of the nicest parts of modern Next.js.

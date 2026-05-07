@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 4: Transitive Metadata And Generated Packages
 
 Some frontend build inputs are not local to a package, and some are not handwritten source at all.

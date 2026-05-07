@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 8: Operating The Build System As Product Infrastructure
 
 A large frontend build system is not a one-time migration. It is infrastructure people use every day.

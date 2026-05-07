@@ -1,3 +1,7 @@
+---
+date: 2026-05-07
+---
+
 # A Cross-Platform Web Runtime Is A Product Boundary
 
 Web apps usually start with a simple assumption: the browser is the platform.

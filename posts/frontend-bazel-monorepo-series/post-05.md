@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 5: Apps, SDKs, And Tests In The Build Graph
 
 Bazel should not replace Vite.

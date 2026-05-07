@@ -18,9 +18,11 @@ filegroup(
     ] + glob([
         "posts/**/*.md",
         "public/**",
+        "scripts/**/*.ts",
         "src/**/*.css",
         "src/**/*.d.ts",
         "src/**/*.ts",
+        "tools/**/*.ts",
     ]),
 )
 
@@ -35,17 +37,39 @@ ts_project(
     no_emit = True,
     tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/mermaid",
         ":node_modules/vite",
     ],
 )
 
 js_binary(
+    name = "render_mermaid_bin",
+    data = [
+        ":node_modules/@mermaid-js/mermaid-cli",
+        ":node_modules/puppeteer",
+        ":site_sources",
+    ],
+    entry_point = "tools/bazel/render_mermaid.ts",
+    node_options = ["--experimental-transform-types"],
+)
+
+js_run_binary(
+    name = "mermaid_svgs",
+    args = [
+        "$(RULEDIR)/mermaid-svg",
+    ],
+    out_dirs = ["mermaid-svg"],
+    tags = ["no-sandbox"],
+    tool = ":render_mermaid_bin",
+)
+
+js_binary(
     name = "build_site_bin",
     data = [
+        ":mermaid_svgs",
+        ":node_modules/@mermaid-js/mermaid-cli",
         ":node_modules/gray-matter",
         ":node_modules/marked",
-        ":node_modules/mermaid",
+        ":node_modules/puppeteer",
         ":node_modules/typescript",
         ":node_modules/vite",
         ":node_modules/vscode-jsonrpc",
@@ -61,8 +85,12 @@ js_binary(
 
 js_run_binary(
     name = "site",
+    srcs = [
+        ":mermaid_svgs",
+    ],
     args = [
         "$(RULEDIR)/dist",
+        "$(location :mermaid_svgs)",
     ],
     out_dirs = ["dist"],
     tool = ":build_site_bin",

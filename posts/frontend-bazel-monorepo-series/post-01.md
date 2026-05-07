@@ -1,3 +1,7 @@
+---
+date: 2026-05-06
+---
+
 # Part 1: Why Bazel For Large Frontend Monorepos?
 
 Frontend build systems usually start as a few package scripts:

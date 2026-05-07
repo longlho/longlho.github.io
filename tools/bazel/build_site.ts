@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { build as viteBuild } from "vite";
+import { hashMermaidSource } from "../mermaid/render_manifest.ts";
 
 type CopyOptions = {
   exclude: Set<string>;
@@ -28,12 +29,74 @@ type Frontmatter = {
   title?: unknown;
 };
 
+const languageAliases = new Map([
+  ["js", "ts"],
+  ["javascript", "ts"],
+  ["jsx", "tsx"],
+  ["py", "python"],
+  ["sh", "bash"],
+  ["shell", "bash"],
+]);
+
+const languageKeywords: Record<string, string[]> = {
+  bash: ["bazel", "build", "cd", "do", "done", "echo", "else", "export", "fi", "for", "if", "in", "pnpm", "run", "then"],
+  json: ["false", "null", "true"],
+  python: [
+    "False",
+    "None",
+    "True",
+    "and",
+    "as",
+    "class",
+    "def",
+    "elif",
+    "else",
+    "for",
+    "from",
+    "if",
+    "import",
+    "in",
+    "is",
+    "not",
+    "or",
+    "return",
+    "with",
+  ],
+  ts: [
+    "async",
+    "await",
+    "boolean",
+    "class",
+    "const",
+    "export",
+    "false",
+    "from",
+    "function",
+    "if",
+    "import",
+    "interface",
+    "let",
+    "new",
+    "null",
+    "number",
+    "return",
+    "string",
+    "true",
+    "type",
+    "undefined",
+  ],
+};
+
+languageKeywords.tsx = languageKeywords.ts;
+
 const outputDir = process.argv[2] ? await resolveOutputDir(process.argv[2]) : "";
 
 if (!outputDir) {
-  throw new Error("Usage: build_site.ts <output-dir>");
+  throw new Error("Usage: build_site.ts <output-dir> [mermaid-svg-dir]");
 }
 
+const mermaidSvgDir = process.argv[3] ? await resolveInputDir(process.argv[3]) : "";
+const mermaidSvgs = mermaidSvgDir ? await loadMermaidSvgs(mermaidSvgDir) : new Map<string, string>();
 const packageRoot = await findPackageRoot();
 const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "site-build-"));
 const buildOutputDir = path.join(workspaceDir, "dist");
@@ -43,11 +106,7 @@ marked.use({
   gfm: true,
   renderer: {
     code(token) {
-      if (token.lang === "mermaid") {
-        return `<div class="mermaid">${escapeHtml(token.text)}</div>`;
-      }
-
-      return false;
+      return renderCodeBlock(token);
     },
   },
 });
@@ -124,6 +183,23 @@ async function resolveOutputDir(outputPath: string): Promise<string> {
   }
 
   return path.join(execroot, outputPath);
+}
+
+async function resolveInputDir(inputPath: string): Promise<string> {
+  if (path.isAbsolute(inputPath)) {
+    return inputPath;
+  }
+
+  if (!inputPath.startsWith("bazel-out/")) {
+    return path.resolve(inputPath);
+  }
+
+  const execroot = await walkUpFor(process.cwd(), "bazel-out");
+  if (!execroot) {
+    return path.resolve(inputPath);
+  }
+
+  return path.join(execroot, inputPath);
 }
 
 async function walkUpFor(start: string, marker: string): Promise<string> {
@@ -212,7 +288,7 @@ async function renderPosts(postsDir: string, generatedDir: string): Promise<void
       return left.title.localeCompare(right.title);
     }
 
-    return right.date.localeCompare(left.date);
+    return right.date.localeCompare(left.date) || left.title.localeCompare(right.title);
   });
 
   await fs.writeFile(
@@ -221,15 +297,12 @@ async function renderPosts(postsDir: string, generatedDir: string): Promise<void
   slug: string;
   title: string;
   excerpt: string;
+  date: string;
   dateLabel: string;
   html: string;
 };
 
-export const posts: Post[] = ${JSON.stringify(
-      posts.map(({ date, ...post }) => post),
-      null,
-      2,
-    )};
+export const posts: Post[] = ${JSON.stringify(posts, null, 2)};
 `,
   );
   await fs.writeFile(path.join(generatedDir, "post-slugs.json"), `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
@@ -289,6 +362,179 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function normalizeCodeLanguage(language = ""): string {
+  const normalized = language.toLowerCase().trim().split(/\s+/)[0] ?? "";
+  return languageAliases.get(normalized) ?? normalized;
+}
+
+function highlightCode(value: string, language: string): string {
+  return value
+    .split("\n")
+    .map((line) => highlightCodeLine(line, language))
+    .join("\n");
+}
+
+function highlightCodeLine(line: string, language: string): string {
+  let html = "";
+  let index = 0;
+
+  while (index < line.length) {
+    if (isLineCommentStart(line, index, language)) {
+      html += `<span class="syntax-comment">${escapeHtml(line.slice(index))}</span>`;
+      break;
+    }
+
+    if ((language === "ts" || language === "tsx") && line.startsWith("/*", index)) {
+      const endIndex = line.indexOf("*/", index + 2);
+      const tokenEnd = endIndex === -1 ? line.length : endIndex + 2;
+      html += `<span class="syntax-comment">${escapeHtml(line.slice(index, tokenEnd))}</span>`;
+      index = tokenEnd;
+      continue;
+    }
+
+    if (isStringStart(line[index], language)) {
+      const tokenEnd = getStringEnd(line, index);
+      html += `<span class="syntax-string">${escapeHtml(line.slice(index, tokenEnd))}</span>`;
+      index = tokenEnd;
+      continue;
+    }
+
+    const nextTokenIndex = getNextSpecialTokenIndex(line, index, language);
+    html += highlightPlainCode(line.slice(index, nextTokenIndex), language);
+    index = nextTokenIndex;
+  }
+
+  return html;
+}
+
+function isLineCommentStart(line: string, index: number, language: string): boolean {
+  if ((language === "ts" || language === "tsx") && line.startsWith("//", index)) {
+    return true;
+  }
+
+  return (language === "bash" || language === "python") && line[index] === "#";
+}
+
+function isStringStart(character: string, language: string): boolean {
+  return character === '"' || character === "'" || ((language === "ts" || language === "tsx" || language === "bash") && character === "`");
+}
+
+function getStringEnd(line: string, startIndex: number): number {
+  const quote = line[startIndex];
+  let index = startIndex + 1;
+
+  while (index < line.length) {
+    if (line[index] === "\\") {
+      index += 2;
+      continue;
+    }
+
+    if (line[index] === quote) {
+      return index + 1;
+    }
+
+    index += 1;
+  }
+
+  return line.length;
+}
+
+function getNextSpecialTokenIndex(line: string, startIndex: number, language: string): number {
+  let nextIndex = line.length;
+
+  for (const token of ['"', "'"]) {
+    const tokenIndex = line.indexOf(token, startIndex);
+    if (tokenIndex !== -1) {
+      nextIndex = Math.min(nextIndex, tokenIndex);
+    }
+  }
+
+  if (language === "ts" || language === "tsx" || language === "bash") {
+    const templateIndex = line.indexOf("`", startIndex);
+    if (templateIndex !== -1) {
+      nextIndex = Math.min(nextIndex, templateIndex);
+    }
+  }
+
+  if (language === "ts" || language === "tsx") {
+    for (const token of ["//", "/*"]) {
+      const tokenIndex = line.indexOf(token, startIndex);
+      if (tokenIndex !== -1) {
+        nextIndex = Math.min(nextIndex, tokenIndex);
+      }
+    }
+  }
+
+  if (language === "bash" || language === "python") {
+    const commentIndex = line.indexOf("#", startIndex);
+    if (commentIndex !== -1) {
+      nextIndex = Math.min(nextIndex, commentIndex);
+    }
+  }
+
+  return nextIndex;
+}
+
+function highlightPlainCode(value: string, language: string): string {
+  const keywords = languageKeywords[language] ?? languageKeywords.ts;
+  const tokenPattern = new RegExp(`\\b(?:${keywords.join("|")})\\b|\\b\\d+(?:\\.\\d+)?\\b|[{}()[\\].,:;<>/+*=!?|&-]+`, "g");
+  let html = "";
+  let index = 0;
+
+  for (const match of value.matchAll(tokenPattern)) {
+    html += escapeHtml(value.slice(index, match.index));
+    html += wrapPlainCodeToken(match[0], keywords);
+    index = (match.index ?? 0) + match[0].length;
+  }
+
+  html += escapeHtml(value.slice(index));
+  return html;
+}
+
+function wrapPlainCodeToken(token: string, keywords: string[]): string {
+  if (keywords.includes(token)) {
+    return `<span class="syntax-keyword">${escapeHtml(token)}</span>`;
+  }
+
+  if (/^\d/.test(token)) {
+    return `<span class="syntax-number">${escapeHtml(token)}</span>`;
+  }
+
+  return `<span class="syntax-punctuation">${escapeHtml(token)}</span>`;
+}
+
+function renderCodeBlock(token: { lang?: string; text: string }): string {
+  const language = normalizeCodeLanguage(token.lang);
+
+  if (language === "mermaid") {
+    const source = token.text.trim();
+    const hash = hashMermaidSource(source);
+    const renderedSvg = mermaidSvgs.get(hash);
+    if (!renderedSvg) {
+      throw new Error(`Missing pre-rendered Mermaid SVG for ${hash}.`);
+    }
+    return `<figure class="mermaid-diagram">${renderedSvg}</figure>`;
+  }
+
+  const languageClass = language ? ` language-${language}` : "";
+  return `<pre class="code-block"><code class="${languageClass.trim()}">${highlightCode(token.text, language)}</code></pre>`;
+}
+
+async function loadMermaidSvgs(svgDir: string): Promise<Map<string, string>> {
+  const manifestPath = path.join(svgDir, "manifest.json");
+
+  if (!(await fileExists(manifestPath))) {
+    throw new Error(`Missing Mermaid SVG manifest at ${manifestPath}.`);
+  }
+
+  const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as Record<string, string>;
+  const entries = await Promise.all(
+    Object.entries(manifest).map(async ([hash, fileName]) => [hash, await fs.readFile(path.join(svgDir, fileName), "utf8")] as const),
+  );
+
+  return new Map(entries);
 }
 
 function getLeadingMarkdownTitle(content: string): string {

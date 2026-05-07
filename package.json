@@ -14,20 +14,21 @@
   "scripts": {
     "bazel:build": "bazel build //:site",
     "bazel:test": "bazel test //:typecheck //:gazelle.check",
-    "render:posts": "node scripts/render-posts.mjs",
+    "render:posts": "node --experimental-transform-types scripts/render-posts.ts",
     "dev": "vite --host 127.0.0.1",
     "build": "bazel build //:site",
     "prerender": "node scripts/prerender-routes.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.14.0",
+    "puppeteer": "24.43.0",
     "typescript": "^6.0.3",
     "vite": "^7.3.3"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
     "marked": "^18.0.3",
-    "mermaid": "^11.14.0",
     "vscode-jsonrpc": "8.2.0",
     "vscode-languageserver-protocol": "3.17.5",
     "vscode-languageserver-textdocument": "1.0.12",
