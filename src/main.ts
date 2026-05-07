@@ -201,3 +201,33 @@ const renderPostPage = (slug: string) => {
 const match = window.location.pathname.match(/^\/posts\/([^/]+)\/?$/);
 
 app.innerHTML = match ? renderPostPage(match[1]) : renderHome();
+
+const renderMermaidDiagrams = async () => {
+  if (!document.querySelector(".mermaid")) {
+    return;
+  }
+
+  const { default: mermaid } = await import("mermaid");
+
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: "base",
+    themeVariables: {
+      background: "#fffaf0",
+      fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+      lineColor: "#65756f",
+      mainBkg: "#fffaf0",
+      primaryBorderColor: "#65756f",
+      primaryColor: "#e7eddc",
+      primaryTextColor: "#14201d",
+      secondaryBorderColor: "#8f4f32",
+      secondaryColor: "#f6f1e8",
+      tertiaryColor: "#fffaf0",
+    },
+  });
+
+  await mermaid.run({ querySelector: ".mermaid" });
+};
+
+void renderMermaidDiagrams();

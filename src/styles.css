@@ -321,6 +321,20 @@ h3 {
   color: #fffaf0;
 }
 
+.post-page .mermaid {
+  overflow-x: auto;
+  margin: 30px 0;
+  padding: 18px;
+  border: 1px solid rgba(29, 38, 36, 0.12);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.post-page .mermaid svg {
+  height: auto;
+  max-width: 100%;
+}
+
 .post-page code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }

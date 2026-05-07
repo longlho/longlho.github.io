@@ -10,7 +10,26 @@ const generatedDir = path.join(root, "src", "generated");
 const generatedPostsPath = path.join(generatedDir, "posts.ts");
 const generatedSlugsPath = path.join(generatedDir, "post-slugs.json");
 
-marked.use({ gfm: true });
+const escapeHtml = (value) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+marked.use({
+  gfm: true,
+  renderer: {
+    code(token) {
+      if (token.lang === "mermaid") {
+        return `<div class="mermaid">${escapeHtml(token.text)}</div>`;
+      }
+
+      return false;
+    },
+  },
+});
 
 const fileExists = async (filePath) => {
   try {
@@ -55,6 +74,10 @@ const slugify = (value) =>
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
+const getLeadingMarkdownTitle = (content) => content.match(/^\s*#\s+(.+?)\s*$/m)?.[1]?.trim() ?? "";
+
+const stripLeadingMarkdownTitle = (content) => content.replace(/^\s*#\s+.+?\s*(?:\r?\n|$)/, "").trimStart();
+
 const getExcerpt = (data, html) => {
   const frontmatterExcerpt = data.excerpt || data.description || data.summary;
 
@@ -85,9 +108,11 @@ const renderPosts = async () => {
     files.map(async (filePath) => {
       const raw = await fs.readFile(filePath, "utf8");
       const { content, data } = matter(raw);
-      const html = await marked.parse(content);
+      const markdownTitle = getLeadingMarkdownTitle(content);
+      const body = markdownTitle ? stripLeadingMarkdownTitle(content) : content;
+      const html = await marked.parse(body);
       const fallbackTitle = path.basename(filePath, ".md").replace(/[-_]+/g, " ");
-      const title = String(data.title || fallbackTitle);
+      const title = String(data.title || markdownTitle || fallbackTitle);
       const slug = slugify(String(data.slug || title));
       const date = data.date ? new Date(data.date).toISOString() : "";
 
