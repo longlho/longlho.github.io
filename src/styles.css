@@ -214,50 +214,19 @@ h2 {
   letter-spacing: 0;
 }
 
-.focus-grid,
-.project-grid {
+.focus-grid {
   display: grid;
   gap: 14px;
-}
-
-.focus-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.project-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.focus-card,
-.project-card {
+.focus-card {
   overflow: hidden;
   min-width: 0;
   border: 1px solid rgba(29, 38, 36, 0.12);
   border-radius: 8px;
   background: #fffaf0;
-}
-
-.focus-card {
   padding: 24px;
-}
-
-.project-card img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-bottom: 1px solid rgba(29, 38, 36, 0.12);
-}
-
-.project-body {
-  padding: 18px;
-}
-
-.project-meta {
-  margin-bottom: 12px;
-  color: #4c688c;
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 h3 {
@@ -268,14 +237,12 @@ h3 {
   letter-spacing: 0;
 }
 
-.focus-card p,
-.project-card p {
+.focus-card p {
   color: rgba(29, 38, 36, 0.7);
   font-size: 0.95rem;
 }
 
-.focus-card ul,
-.project-card ul {
+.focus-card ul {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -284,8 +251,7 @@ h3 {
   list-style: none;
 }
 
-.focus-card li,
-.project-card li {
+.focus-card li {
   padding: 5px 8px;
   border-radius: 999px;
   background: #e7eddc;
@@ -414,10 +380,6 @@ h3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .project-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .focus-grid {
     grid-template-columns: 1fr;
   }
@@ -441,10 +403,6 @@ h3 {
 
   .hero-panel div {
     min-height: auto;
-  }
-
-  .project-grid {
-    grid-template-columns: 1fr;
   }
 
   h1 {

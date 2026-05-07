@@ -7,13 +7,6 @@ type Focus = {
   details: string[];
 };
 
-type CollegeProject = {
-  title: string;
-  image: string;
-  summary: string;
-  details: string[];
-};
-
 const focusAreas: Focus[] = [
   {
     title: "Build systems",
@@ -35,42 +28,10 @@ const focusAreas: Focus[] = [
   },
 ];
 
-const collegeProjects: CollegeProject[] = [
-  {
-    title: "iLafayette",
-    image: "/images/snapshots/ilaf.jpg",
-    summary:
-      "An iPhone app prototype that brought campus services, events, course details, directory lookup, and transit info onto mobile.",
-    details: ["iPhone", "Campus services", "Prototype"],
-  },
-  {
-    title: "MetaDB",
-    image: "/images/snapshots/metadb.jpg",
-    summary:
-      "A metadata management web app for library datasets, including project workflows, search, and image-derived metadata.",
-    details: ["JavaScript", "J2EE", "PostgreSQL"],
-  },
-  {
-    title: "Computational art",
-    image: "/images/snapshots/compart.png",
-    summary:
-      "Interfaces for generative systems, including an L-system based visual tool built with artists and researchers.",
-    details: ["Visualization", "Research UI", "Creative tools"],
-  },
-  {
-    title: "Flood Advisor",
-    image: "/images/snapshots/flood.png",
-    summary:
-      "A Java desktop prototype for mapping flood-gate data near a location, combining geocoding, maps, and local datasets.",
-    details: ["Java", "Mapping", "Data parsing"],
-  },
-];
-
 const links = [
   { label: "GitHub", href: "https://github.com/longlho" },
   { label: "Writing", href: "/#writing" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/longlho" },
-  { label: "Resume", href: "/resume.pdf" },
 ];
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -184,34 +145,6 @@ const renderHome = () => `
                 <ul aria-label="${area.title} details">
                   ${area.details.map((detail) => `<li>${detail}</li>`).join("")}
                 </ul>
-              </article>
-            `,
-          )
-          .join("")}
-      </div>
-    </section>
-
-    <section class="band" aria-labelledby="college-title">
-      <div class="section-heading">
-        <p class="eyebrow">College stuff</p>
-        <h2 id="college-title">Old projects, kept around as a small archive</h2>
-      </div>
-      <div class="project-grid">
-        ${collegeProjects
-          .map(
-            (project) => `
-              <article class="project-card">
-                <img src="${project.image}" alt="" loading="lazy" />
-                <div class="project-body">
-                  <div class="project-meta">
-                    <span>College project</span>
-                  </div>
-                  <h3>${project.title}</h3>
-                  <p>${project.summary}</p>
-                  <ul aria-label="${project.title} details">
-                    ${project.details.map((detail) => `<li>${detail}</li>`).join("")}
-                  </ul>
-                </div>
               </article>
             `,
           )
