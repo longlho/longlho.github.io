@@ -1,22 +1,28 @@
 {
-  "author": "Long Ho <holevietlong@gmail.com> (http://www.azndezign.com)",
-  "name": "azndezign.com",
-  "description": "My personal site",
-  "version": "0.1.0",
-  "homepage": "http://www.azndezign.com",
+  "author": "Long Ho",
+  "name": "longlho.github.io",
+  "description": "Personal website for Long Ho",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "homepage": "https://longlho.github.io",
   "repository": {
     "type": "git",
-    "url": "git://github.com/longlho/longlho.github.com.git"
+    "url": "git+https://github.com/longlho/longlho.github.io.git"
   },
-  "main": "server.js",
   "scripts": {
-    "test": "npm test"
+    "render:posts": "node scripts/render-posts.mjs",
+    "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run render:posts",
+    "build": "vite build && npm run prerender",
+    "prerender": "node scripts/prerender-routes.mjs",
+    "preview": "vite preview --host 127.0.0.1"
   },
-  "engines": {
-    "node": "~0.6.0"
+  "devDependencies": {
+    "vite": "^8.0.11"
   },
   "dependencies": {
-    "express" : "latest"
-  },
-  "devDependencies": {}
+    "gray-matter": "^4.0.3",
+    "marked": "^18.0.3"
+  }
 }
