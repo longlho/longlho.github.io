@@ -19,15 +19,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/configure-pages@v5
+      - uses: bazel-contrib/setup-bazel@0.19.0
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+      - run: bazel test //:typecheck //:gazelle.check --lockfile_mode=error
+      - run: bazel build //:site --lockfile_mode=error
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p pages-dist
+          cp -aL bazel-bin/dist/. pages-dist/
+          test -f pages-dist/index.html
+          test -f pages-dist/posts/part-1-why-bazel-for-large-frontend-monorepos/index.html
+          test -f pages-dist/posts/next-server-actions-are-not-an-api-boundary/index.html
+          test -z "$(find pages-dist -type l -print -quit)"
+      - uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: pages-dist
 
   deploy:
     environment:
@@ -37,4 +47,4 @@ jobs:
     needs: build
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

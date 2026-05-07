@@ -1,0 +1,91 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@gazelle//:def.bzl", "gazelle", "gazelle_binary", "gazelle_test")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# gazelle:ts_enabled false
+
+npm_link_all_packages(name = "node_modules")
+
+filegroup(
+    name = "site_sources",
+    srcs = [
+        "index.html",
+        "package.json",
+        "vite.config.ts",
+    ] + glob([
+        "posts/**/*.md",
+        "public/**",
+        "src/**/*.css",
+        "src/**/*.d.ts",
+        "src/**/*.ts",
+    ]),
+)
+
+ts_project(
+    name = "typecheck",
+    srcs = [
+        "src/generated/posts.ts",
+        "src/main.ts",
+        "src/vite-env.d.ts",
+        "vite.config.ts",
+    ],
+    no_emit = True,
+    tsconfig = "tsconfig.json",
+    deps = [
+        ":node_modules/mermaid",
+        ":node_modules/vite",
+    ],
+)
+
+js_binary(
+    name = "build_site_bin",
+    data = [
+        ":node_modules/gray-matter",
+        ":node_modules/marked",
+        ":node_modules/mermaid",
+        ":node_modules/typescript",
+        ":node_modules/vite",
+        ":node_modules/vscode-jsonrpc",
+        ":node_modules/vscode-languageserver-protocol",
+        ":node_modules/vscode-languageserver-textdocument",
+        ":node_modules/vscode-languageserver-types",
+        ":node_modules/vscode-uri",
+        ":site_sources",
+    ],
+    entry_point = "tools/bazel/build_site.mjs",
+)
+
+js_run_binary(
+    name = "site",
+    args = [
+        "$(RULEDIR)/dist",
+    ],
+    out_dirs = ["dist"],
+    tool = ":build_site_bin",
+)
+
+alias(
+    name = "build",
+    actual = ":site",
+)
+
+gazelle_binary(
+    name = "gazelle_bin",
+    languages = [
+        "@gazelle_ts//ts",
+    ],
+)
+
+gazelle(
+    name = "gazelle",
+    gazelle = ":gazelle_bin",
+)
+
+gazelle_test(
+    name = "gazelle.check",
+    gazelle = ":gazelle_bin",
+    workspace = "//:BUILD.bazel",
+)
