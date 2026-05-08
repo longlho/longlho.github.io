@@ -1,6 +1,13 @@
 import { posts } from "./generated/posts";
-import mermaid from "mermaid";
+import type mermaidApi from "mermaid";
+import mermaidScriptUrl from "mermaid/dist/mermaid.min.js?url";
 import "./styles.css";
+
+declare global {
+  interface Window {
+    mermaid?: typeof mermaidApi;
+  }
+}
 
 type Focus = {
   title: string;
@@ -41,8 +48,7 @@ if (!app) {
   throw new Error("Missing #app root element");
 }
 
-mermaid.initialize({
-  deterministicIds: true,
+const mermaidConfig = {
   fontFamily:
     'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   securityLevel: "strict",
@@ -65,7 +71,28 @@ mermaid.initialize({
     tertiaryTextColor: "#fff7e8",
     textColor: "#fff7e8",
   },
-});
+} satisfies Parameters<typeof mermaidApi.initialize>[0];
+
+const loadMermaid = async () => {
+  if (window.mermaid) {
+    return window.mermaid;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = mermaidScriptUrl;
+    script.async = true;
+    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener("error", () => reject(new Error("Failed to load Mermaid runtime.")), { once: true });
+    document.head.append(script);
+  });
+
+  if (!window.mermaid) {
+    throw new Error("Mermaid runtime did not initialize.");
+  }
+
+  return window.mermaid;
+};
 
 const externalAttrs = (href: string) =>
   href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : "";
@@ -328,6 +355,8 @@ const renderMermaidDiagrams = async () => {
     return;
   }
 
+  const mermaid = await loadMermaid();
+  mermaid.initialize(mermaidConfig);
   await mermaid.run({ nodes });
 };
 
