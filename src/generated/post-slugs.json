@@ -1,6 +1,6 @@
 [
   "a-cross-platform-web-runtime-is-a-product-boundary",
-  "next-server-actions-are-not-an-api-boundary",
+  "rsc-server-functions-are-not-an-api-boundary",
   "part-1-why-bazel-for-large-frontend-monorepos",
   "part-2-the-anatomy-of-a-frontend-package",
   "part-3-typechecking-and-dependency-hygiene",

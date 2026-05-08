@@ -1,6 +1,6 @@
 ---
 date: 2026-05-07
-slug: next-server-actions-are-not-an-api-boundary
+slug: rsc-server-functions-are-not-an-api-boundary
 ---
 
 # RSC Server Functions Are Not An API Boundary
