@@ -1,0 +1,32 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("//:tools/ts.bzl", "ts_library")
+
+# gazelle:exclude generated
+
+js_library(
+    name = "site_sources",
+    srcs = [
+        "main.ts",
+        "styles.css",
+        "vite-env.d.ts",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+ts_library(
+    name = "typecheck",
+    srcs = [
+        "generated/posts.ts",  # keep
+        "main.ts",
+        "vite-env.d.ts",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:node_modules/@iconify/types",  # keep
+        "//:node_modules/@types/d3-selection",  # keep
+        "//:node_modules/@types/node",  # keep
+        "//:node_modules/mermaid",
+        "//:node_modules/type-fest",  # keep
+        "//:node_modules/vite",  # keep
+    ],
+)

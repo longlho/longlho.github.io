@@ -9,7 +9,6 @@
     "noUncheckedIndexedAccess": true,
     "strict": true,
     "target": "ES2022",
-    "types": ["vite/client"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "vite.config.ts"]
+    "types": ["node"]
+  }
 }

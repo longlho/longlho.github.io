@@ -25,7 +25,7 @@ jobs:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
-      - run: bazel test //:typecheck //:gazelle.check --lockfile_mode=error
+      - run: bazel test //... --lockfile_mode=error
       - run: bazel build //:site --lockfile_mode=error
       - name: Prepare Pages artifact
         run: |
@@ -33,7 +33,7 @@ jobs:
           cp -aL bazel-bin/dist/. pages-dist/
           test -f pages-dist/index.html
           test -f pages-dist/posts/part-1-why-bazel-for-large-frontend-monorepos/index.html
-          test -f pages-dist/posts/next-server-actions-are-not-an-api-boundary/index.html
+          test -f pages-dist/posts/rsc-server-functions-are-not-an-api-boundary/index.html
           test -z "$(find pages-dist -type l -print -quit)"
       - uses: actions/upload-pages-artifact@v4
         with:

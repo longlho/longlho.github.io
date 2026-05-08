@@ -1,13 +1,22 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary", "gazelle_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//:tools/ts.bzl", "ts_config", "ts_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# gazelle:ts_enabled false
+# gazelle:ts_library_name typecheck
+# gazelle:ts_npm_link_pattern //:node_modules/{pkg}
+# gazelle:map_kind ts_library ts_library //:tools/ts.bzl
+# gazelle:exclude scripts
+# gazelle:exclude tools/bazel
 
 npm_link_all_packages(name = "node_modules")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+)
 
 filegroup(
     name = "site_sources",
@@ -15,48 +24,25 @@ filegroup(
         "index.html",
         "package.json",
         "vite.config.ts",
-    ] + glob([
-        "posts/**/*.md",
-        "public/**",
-        "scripts/**/*.ts",
-        "src/**/*.css",
-        "src/**/*.d.ts",
-        "src/**/*.ts",
-        "tools/**/*.ts",
-    ]),
-)
-
-ts_project(
-    name = "typecheck",
-    srcs = [
-        "src/generated/posts.ts",
-        "src/main.ts",
-        "src/vite-env.d.ts",
-        "vite.config.ts",
-    ],
-    no_emit = True,
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/mermaid",
-        ":node_modules/type-fest",
-        ":node_modules/vite",
-    ],
+        "//src:site_sources",
+    ] + glob(
+        [
+            "posts/**/*.md",
+            "public/**",
+        ],
+        allow_empty = True,
+    ),
 )
 
 js_binary(
     name = "build_site_bin",
     data = [
-        ":node_modules/gray-matter",
-        ":node_modules/marked",
-        ":node_modules/mermaid",
-        ":node_modules/typescript",
-        ":node_modules/vite",
-        ":node_modules/vscode-jsonrpc",
-        ":node_modules/vscode-languageserver-protocol",
-        ":node_modules/vscode-languageserver-textdocument",
-        ":node_modules/vscode-languageserver-types",
-        ":node_modules/vscode-uri",
-        ":site_sources",
+        ":site_sources",  # keep
+        "//:node_modules/@types/node",
+        "//:node_modules/gray-matter",
+        "//:node_modules/marked",
+        "//:node_modules/mermaid",  # keep
+        "//:node_modules/vite",
     ],
     entry_point = "tools/bazel/build_site.ts",
     node_options = ["--experimental-transform-types"],
@@ -92,4 +78,14 @@ gazelle_test(
     name = "gazelle.check",
     gazelle = ":gazelle_bin",
     workspace = "//:BUILD.bazel",
+)
+
+ts_library(
+    name = "typecheck",
+    srcs = ["vite.config.ts"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:node_modules/@types/node",  # keep
+        "//:node_modules/vite",
+    ],
 )

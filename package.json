@@ -13,7 +13,7 @@
   },
   "scripts": {
     "bazel:build": "bazel build //:site",
-    "bazel:test": "bazel test //:typecheck //:gazelle.check",
+    "bazel:test": "bazel test //... --lockfile_mode=error",
     "render:posts": "node --experimental-transform-types scripts/render-posts.ts",
     "dev": "vite --host 127.0.0.1",
     "build": "bazel build //:site",
@@ -21,11 +21,14 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {
+    "@types/d3-selection": "3.0.11",
+    "@types/node": "25.6.1",
     "type-fest": "^5.6.0",
     "typescript": "^6.0.3",
     "vite": "^7.3.3"
   },
   "dependencies": {
+    "@iconify/types": "^2.0.0",
     "gray-matter": "^4.0.3",
     "marked": "^18.0.3",
     "mermaid": "^11.14.0",
