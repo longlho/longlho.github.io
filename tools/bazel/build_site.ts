@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
+import * as ts from "typescript";
 import { build as viteBuild } from "vite";
 
 type CopyOptions = {
@@ -37,6 +38,30 @@ const languageAliases = new Map([
   ["shell", "bash"],
 ]);
 
+const tsKeywords = [
+  "async",
+  "await",
+  "boolean",
+  "class",
+  "const",
+  "export",
+  "false",
+  "from",
+  "function",
+  "if",
+  "import",
+  "interface",
+  "let",
+  "new",
+  "null",
+  "number",
+  "return",
+  "string",
+  "true",
+  "type",
+  "undefined",
+];
+
 const languageKeywords: Record<string, string[]> = {
   bash: ["bazel", "build", "cd", "do", "done", "echo", "else", "export", "fi", "for", "if", "in", "pnpm", "run", "then"],
   json: ["false", "null", "true"],
@@ -61,32 +86,10 @@ const languageKeywords: Record<string, string[]> = {
     "return",
     "with",
   ],
-  ts: [
-    "async",
-    "await",
-    "boolean",
-    "class",
-    "const",
-    "export",
-    "false",
-    "from",
-    "function",
-    "if",
-    "import",
-    "interface",
-    "let",
-    "new",
-    "null",
-    "number",
-    "return",
-    "string",
-    "true",
-    "type",
-    "undefined",
-  ],
+  ts: tsKeywords,
 };
 
-languageKeywords.tsx = languageKeywords.ts;
+languageKeywords.tsx = tsKeywords;
 
 const outputDir = process.argv[2] ? await resolveOutputDir(process.argv[2]) : "";
 
@@ -273,17 +276,7 @@ async function renderPosts(postsDir: string, generatedDir: string): Promise<void
 
   await fs.writeFile(
     path.join(generatedDir, "posts.ts"),
-    `export type Post = {
-  slug: string;
-  title: string;
-  excerpt: string;
-  date: string;
-  dateLabel: string;
-  html: string;
-};
-
-export const posts: Post[] = ${JSON.stringify(posts, null, 2)};
-`,
+    printPostsModule(posts),
   );
   await fs.writeFile(path.join(generatedDir, "post-slugs.json"), `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
 }
@@ -374,7 +367,7 @@ function highlightCodeLine(line: string, language: string): string {
       continue;
     }
 
-    if (isStringStart(line[index], language)) {
+    if (isStringStart(line[index] ?? "", language)) {
       const tokenEnd = getStringEnd(line, index);
       html += `<span class="syntax-string">${escapeHtml(line.slice(index, tokenEnd))}</span>`;
       index = tokenEnd;
@@ -458,7 +451,7 @@ function getNextSpecialTokenIndex(line: string, startIndex: number, language: st
 }
 
 function highlightPlainCode(value: string, language: string): string {
-  const keywords = languageKeywords[language] ?? languageKeywords.ts;
+  const keywords = languageKeywords[language] ?? tsKeywords;
   const tokenPattern = new RegExp(`\\b(?:${keywords.join("|")})\\b|\\b\\d+(?:\\.\\d+)?\\b|[{}()[\\].,:;<>/+*=!?|&-]+`, "g");
   let html = "";
   let index = 0;
@@ -539,4 +532,70 @@ function formatDate(date: string): string {
     timeZone: "UTC",
     year: "numeric",
   }).format(new Date(date));
+}
+
+function printPostsModule(posts: RenderedPost[]): string {
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  const file = ts.factory.createSourceFile(
+    [
+      ts.factory.createTypeAliasDeclaration(
+        [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        "Post",
+        undefined,
+        ts.factory.createTypeLiteralNode([
+          createStringPropertySignature("slug"),
+          createStringPropertySignature("title"),
+          createStringPropertySignature("excerpt"),
+          createStringPropertySignature("date"),
+          createStringPropertySignature("dateLabel"),
+          createStringPropertySignature("html"),
+        ]),
+      ),
+      ts.factory.createVariableStatement(
+        [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        ts.factory.createVariableDeclarationList(
+          [
+            ts.factory.createVariableDeclaration(
+              "posts",
+              undefined,
+              ts.factory.createArrayTypeNode(ts.factory.createTypeReferenceNode("Post")),
+              ts.factory.createArrayLiteralExpression(posts.map((post) => createPostNode(post)), true),
+            ),
+          ],
+          ts.NodeFlags.Const,
+        ),
+      ),
+    ],
+    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None,
+  );
+
+  return `${printer.printFile(file)}\n`;
+}
+
+function createStringPropertySignature(name: string): ts.PropertySignature {
+  return ts.factory.createPropertySignature(
+    undefined,
+    name,
+    undefined,
+    ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+  );
+}
+
+function createPostNode(post: RenderedPost): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
+    [
+      createPostProperty("slug", post.slug),
+      createPostProperty("title", post.title),
+      createPostProperty("excerpt", post.excerpt),
+      createPostProperty("date", post.date),
+      createPostProperty("dateLabel", post.dateLabel),
+      createPostProperty("html", post.html),
+    ],
+    true,
+  );
+}
+
+function createPostProperty(name: string, value: string): ts.PropertyAssignment {
+  return ts.factory.createPropertyAssignment(name, ts.factory.createStringLiteral(value));
 }
