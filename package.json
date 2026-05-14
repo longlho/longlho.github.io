@@ -6,7 +6,6 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#app/*": "./*",
     "#tools/*": "./tools/*"
   },
   "packageManager": "pnpm@10.33.4",

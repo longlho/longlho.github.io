@@ -8,7 +8,7 @@
     "noEmit": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "#app/*": ["./*"],
+      "#/*": ["./*"],
       "#tools/*": ["./tools/*"]
     },
     "strict": true,

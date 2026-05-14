@@ -51,6 +51,11 @@ function postsPlugin(): Plugin {
 export default defineConfig({
   base: "/",
   plugins: [postsPlugin()],
+  resolve: {
+    alias: {
+      "#/": `${root}/`,
+    },
+  },
   server: {
     watch: {
       ignored: ["**/bazel-*/**", "**/bazel-bin/**", "**/bazel-out/**", "**/bazel-testlogs/**"],
