@@ -1,11 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
-import * as ts from "typescript";
 
-type RenderedPost = {
+export type RenderedPost = {
   slug: string;
   title: string;
   excerpt: string;
@@ -27,12 +25,6 @@ type MarkedCodeToken = {
   lang?: string;
   text: string;
 };
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const postsDir = path.join(root, "posts");
-const generatedDir = path.join(root, "src", "generated");
-const generatedPostsPath = path.join(generatedDir, "posts.ts");
-const generatedSlugsPath = path.join(generatedDir, "post-slugs.json");
 
 const languageAliases = new Map([
   ["js", "ts"],
@@ -105,9 +97,7 @@ marked.use({
   },
 });
 
-await renderPosts();
-
-async function renderPosts(): Promise<void> {
+export async function renderPostsFromDir(postsDir: string): Promise<RenderedPost[]> {
   const files = await collectMarkdownFiles(postsDir);
   const posts: RenderedPost[] = await Promise.all(
     files.map(async (filePath) => {
@@ -140,12 +130,11 @@ async function renderPosts(): Promise<void> {
     return right.date.localeCompare(left.date) || left.title.localeCompare(right.title);
   });
 
-  await fs.mkdir(generatedDir, { recursive: true });
-  await fs.writeFile(
-    generatedPostsPath,
-    printPostsModule(posts),
-  );
-  await fs.writeFile(generatedSlugsPath, `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
+  return posts;
+}
+
+export function printPostsJavaScriptModule(posts: RenderedPost[]): string {
+  return `export const posts = ${JSON.stringify(posts, null, 2)};\n`;
 }
 
 async function collectMarkdownFiles(dir: string): Promise<string[]> {
@@ -386,70 +375,4 @@ function formatDate(date: string): string {
     timeZone: "UTC",
     year: "numeric",
   }).format(new Date(date));
-}
-
-function printPostsModule(posts: RenderedPost[]): string {
-  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-  const file = ts.factory.createSourceFile(
-    [
-      ts.factory.createTypeAliasDeclaration(
-        [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-        "Post",
-        undefined,
-        ts.factory.createTypeLiteralNode([
-          createStringPropertySignature("slug"),
-          createStringPropertySignature("title"),
-          createStringPropertySignature("excerpt"),
-          createStringPropertySignature("date"),
-          createStringPropertySignature("dateLabel"),
-          createStringPropertySignature("html"),
-        ]),
-      ),
-      ts.factory.createVariableStatement(
-        [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-        ts.factory.createVariableDeclarationList(
-          [
-            ts.factory.createVariableDeclaration(
-              "posts",
-              undefined,
-              ts.factory.createArrayTypeNode(ts.factory.createTypeReferenceNode("Post")),
-              ts.factory.createArrayLiteralExpression(posts.map((post) => createPostNode(post)), true),
-            ),
-          ],
-          ts.NodeFlags.Const,
-        ),
-      ),
-    ],
-    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
-  );
-
-  return `${printer.printFile(file)}\n`;
-}
-
-function createStringPropertySignature(name: string): ts.PropertySignature {
-  return ts.factory.createPropertySignature(
-    undefined,
-    name,
-    undefined,
-    ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-  );
-}
-
-function createPostNode(post: RenderedPost): ts.ObjectLiteralExpression {
-  return ts.factory.createObjectLiteralExpression(
-    [
-      createPostProperty("slug", post.slug),
-      createPostProperty("title", post.title),
-      createPostProperty("excerpt", post.excerpt),
-      createPostProperty("date", post.date),
-      createPostProperty("dateLabel", post.dateLabel),
-      createPostProperty("html", post.html),
-    ],
-    true,
-  );
-}
-
-function createPostProperty(name: string, value: string): ts.PropertyAssignment {
-  return ts.factory.createPropertyAssignment(name, ts.factory.createStringLiteral(value));
 }

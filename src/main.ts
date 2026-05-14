@@ -1,4 +1,4 @@
-import { posts } from "./generated/posts";
+import { posts } from "virtual:posts";
 import type mermaidApi from "mermaid";
 import mermaidScriptUrl from "mermaid/dist/mermaid.min.js?url";
 import "./styles.css";

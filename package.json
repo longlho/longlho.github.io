@@ -14,10 +14,8 @@
   "scripts": {
     "bazel:build": "bazel build //:site",
     "bazel:test": "bazel test //... --lockfile_mode=error",
-    "render:posts": "node --experimental-transform-types scripts/render-posts.ts",
     "dev": "vite --host 127.0.0.1",
     "build": "bazel build //:site",
-    "prerender": "node scripts/prerender-routes.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {

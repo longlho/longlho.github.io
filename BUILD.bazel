@@ -22,6 +22,7 @@ filegroup(
     srcs = [
         "index.html",
         "package.json",
+        "post-renderer.ts",
         "vite.config.ts",
         "//src:site_sources",
     ] + glob(
@@ -43,7 +44,6 @@ js_binary(
         "//:node_modules/gray-matter",  # keep
         "//:node_modules/marked",  # keep
         "//:node_modules/mermaid",  # keep
-        "//:node_modules/typescript",  # keep
         "//:node_modules/vite",  # keep
     ],
     entry_point = "tools/bazel/build_site.ts",
@@ -84,24 +84,31 @@ gazelle_test(
 
 ts_library(
     name = "typecheck",
-    srcs = ["vite.config.ts"],
+    srcs = [
+        "post-renderer.ts",
+        "vite.config.ts",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",  # keep
+        "//:node_modules/gray-matter",
+        "//:node_modules/marked",
         "//:node_modules/vite",
     ],
 )
 
 ts_library(
     name = "build_site_typecheck",
-    srcs = ["tools/bazel/build_site.ts"],
+    srcs = [
+        "post-renderer.ts",
+        "tools/bazel/build_site.ts",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",  # keep
         "//:node_modules/fast-xml-parser",  # keep
         "//:node_modules/gray-matter",  # keep
         "//:node_modules/marked",  # keep
-        "//:node_modules/typescript",  # keep
         "//:node_modules/vite",  # keep
     ],
 )
