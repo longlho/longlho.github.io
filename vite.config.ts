@@ -1,11 +1,16 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { pathToFileURL } from "node:url";
 import { defineConfig, type Plugin } from "vite";
-import { printPostsJavaScriptModule, renderPostsFromDir } from "./post-renderer";
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const root = process.cwd();
+const postRendererUrl = pathToFileURL(path.join(root, "tools", "post-renderer.ts")).href;
 const virtualPostsModuleId = "virtual:posts";
 const resolvedVirtualPostsModuleId = `\0${virtualPostsModuleId}`;
+
+type PostRenderer = {
+  printPostsJavaScriptModule(posts: unknown[]): string;
+  renderPostsFromDir(postsDir: string): Promise<unknown[]>;
+};
 
 function postsPlugin(): Plugin {
   return {
@@ -20,6 +25,7 @@ function postsPlugin(): Plugin {
         return;
       }
 
+      const { printPostsJavaScriptModule, renderPostsFromDir } = (await import(postRendererUrl)) as PostRenderer;
       return printPostsJavaScriptModule(await renderPostsFromDir(path.join(root, "posts")));
     },
     handleHotUpdate({ file, server }) {

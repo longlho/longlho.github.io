@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { XMLBuilder } from "fast-xml-parser";
 import { build as viteBuild } from "vite";
-import { renderPostsFromDir, type RenderedPost } from "../../post-renderer.ts";
+import { renderPostsFromDir, type RenderedPost } from "../post-renderer.ts";
 
 type CopyOptions = {
   exclude: Set<string>;

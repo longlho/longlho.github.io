@@ -1,13 +1,13 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
+load("@aspect_rules_js//js:defs.bzl", "js_library", "js_run_binary")
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary", "gazelle_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//:tools/ts.bzl", "ts_config", "ts_library")
+load("//tools:ts.bzl", "ts_config", "ts_library")
 
 package(default_visibility = ["//visibility:public"])
 
 # gazelle:ts_library_name typecheck
 # gazelle:ts_npm_link_pattern //:node_modules/{pkg}
-# gazelle:map_kind ts_library ts_library //:tools/ts.bzl
+# gazelle:map_kind ts_library ts_library //tools:ts.bzl
 # gazelle:exclude tools/bazel
 
 npm_link_all_packages(name = "node_modules")
@@ -17,14 +17,14 @@ ts_config(
     src = "tsconfig.json",
 )
 
-filegroup(
+js_library(
     name = "site_sources",
     srcs = [
         "index.html",
         "package.json",
-        "post-renderer.ts",
         "vite.config.ts",
         "//src:site_sources",
+        "//tools:post_renderer_source",
     ] + glob(
         [
             "posts/**/*.md",
@@ -35,28 +35,13 @@ filegroup(
     ),
 )
 
-js_binary(
-    name = "build_site_bin",
-    data = [
-        ":site_sources",  # keep
-        "//:node_modules/@types/node",  # keep
-        "//:node_modules/fast-xml-parser",  # keep
-        "//:node_modules/gray-matter",  # keep
-        "//:node_modules/marked",  # keep
-        "//:node_modules/mermaid",  # keep
-        "//:node_modules/vite",  # keep
-    ],
-    entry_point = "tools/bazel/build_site.ts",
-    node_options = ["--experimental-transform-types"],
-)
-
 js_run_binary(
     name = "site",
     args = [
         "$(RULEDIR)/dist",
     ],
     out_dirs = ["dist"],
-    tool = ":build_site_bin",
+    tool = "//tools:build_site_bin",
 )
 
 alias(
@@ -84,31 +69,10 @@ gazelle_test(
 
 ts_library(
     name = "typecheck",
-    srcs = [
-        "post-renderer.ts",
-        "vite.config.ts",
-    ],
+    srcs = ["vite.config.ts"],
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",  # keep
-        "//:node_modules/gray-matter",
-        "//:node_modules/marked",
         "//:node_modules/vite",
-    ],
-)
-
-ts_library(
-    name = "build_site_typecheck",
-    srcs = [
-        "post-renderer.ts",
-        "tools/bazel/build_site.ts",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//:node_modules/@types/node",  # keep
-        "//:node_modules/fast-xml-parser",  # keep
-        "//:node_modules/gray-matter",  # keep
-        "//:node_modules/marked",  # keep
-        "//:node_modules/vite",  # keep
     ],
 )
