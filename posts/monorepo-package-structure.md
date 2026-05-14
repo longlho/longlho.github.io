@@ -2,14 +2,20 @@
 date: 2026-05-14
 ---
 
-# A Package Is A Distribution Boundary
+# A Package Is a Distribution Boundary
 
-JavaScript monorepos often confuse two ideas:
+There is a habit in JavaScript monorepos that feels natural at first:
+
+> New folder, new `package.json`, new package name.
+
+It is tidy. It makes imports look official. It gives a team something that feels like a boundary.
+
+The trouble is that it quietly mixes up two different things:
 
 - a folder of code with an owner
 - an npm package with a public name
 
-Those are not the same thing.
+Those are not the same thing, and treating them as the same thing makes the repository harder for both people and tools to understand.
 
 The common pattern is to put a `package.json` in every meaningful folder, give it a name like `@acme/payments`, add it to a workspace, and import it from other code:
 
@@ -17,9 +23,9 @@ The common pattern is to put a `package.json` in every meaningful folder, give i
 import {calculateTax} from "@acme/payments";
 ```
 
-That looks clean. It is also a lot of machinery for code that never leaves the repository.
+That import looks clean. It also hides a lot of machinery for code that never leaves the repository.
 
-If the package is not published, installed by another repository, or consumed through a stable external contract, the package name is not a product boundary. It is an alias. It adds a second naming system on top of the filesystem.
+If the package is not published, installed by another repository, or consumed through a stable external contract, the package name is not really a product boundary. It is an alias with ceremony. The repository now has two naming systems: the filesystem and the package graph.
 
 ## The Package Name Trap
 
@@ -37,7 +43,7 @@ The package manifest invents another one:
 }
 ```
 
-Now every tool has to answer questions that did not need to exist:
+Once both names exist, every tool has to answer questions the code did not really need to ask:
 
 - Which folder owns `@acme/payments`?
 - Is that name a workspace package, an installed dependency, or both?
@@ -45,17 +51,17 @@ Now every tool has to answer questions that did not need to exist:
 - Which `exports`, `types`, `main`, `module`, and `sideEffects` fields matter for this tool?
 - Does the bundler see the same graph as TypeScript, tests, lint, and the build system?
 
-That indirection is tolerable for public packages because public packages need a distribution contract. It is much less compelling for private internal code.
+That indirection is worth paying for public packages because public packages need a distribution contract. It is much less convincing for private internal code.
 
-The problem gets worse when internal packages use root entrypoints as their daily import surface:
+It gets worse when internal packages use root entrypoints as the normal way to import anything:
 
 ```ts
 import {Button, Modal, TextField} from "@acme/ui";
 ```
 
-That entrypoint is usually a barrel file. It hides the source location behind a tidy import, but the tools still have to resolve the re-export graph. Marvin Hagemeister's ["The barrel file debacle"](https://marvinh.dev/blog/speeding-up-javascript-ecosystem-part-7/) is the canonical writeup here. The [Next.js local development guide](https://nextjs.org/docs/app/guides/local-development#barrel-files) now explicitly warns that barrel files can slow builds because the compiler has to parse them to check for side effects. Atlassian published a large migration story, ["How We Achieved 75% Faster Builds by Removing Barrel Files"](https://www.atlassian.com/blog/atlassian-engineering/faster-builds-when-removing-barrel-files), where removing barrel files improved TypeScript, test selection, and CI performance.
+That entrypoint is usually a barrel file. It is pleasant to read, but the tools still have to resolve the re-export graph behind it. Marvin Hagemeister's ["The barrel file debacle"](https://marvinh.dev/blog/speeding-up-javascript-ecosystem-part-7/) is the canonical writeup here. The [Next.js local development guide](https://nextjs.org/docs/app/guides/local-development#barrel-files) now explicitly warns that barrel files can slow builds because the compiler has to parse them to check for side effects. Atlassian also published a large migration story, ["How We Achieved 75% Faster Builds by Removing Barrel Files"](https://www.atlassian.com/blog/atlassian-engineering/faster-builds-when-removing-barrel-files), where removing barrel files improved TypeScript, test selection, and CI performance.
 
-The shape of the mistake is the same:
+The pattern is familiar:
 
 ```mermaid
 flowchart LR
@@ -65,9 +71,9 @@ flowchart LR
   resolver --> extra["extra files in the graph"]
 ```
 
-A short import is not free if it makes every tool chase a larger graph.
+A short import is not free if every tool has to chase a larger graph to understand it.
 
-Public package entrypoints are still useful. A published library should have a small, documented API. But that is the edge of the repository. It should not be the default way internal source files talk to each other.
+Public package entrypoints are still useful. A published library should have a small, documented API. But that is the edge of the repository. It does not need to become the default way internal files talk to each other.
 
 ## Relative Imports Are Not Great Either
 
@@ -78,19 +84,19 @@ import {calculateTax} from "../../payments/calculate-tax.js";
 import {formatMoney} from "../../../core/money/format.js";
 ```
 
-Relative imports are honest. They do not need package manager magic. They can be resolved from the importing file alone.
+Relative imports are honest. They do not need package manager magic, and they can be resolved from the importing file alone.
 
-They are also annoying in a large codebase.
+They are also pretty annoying in a large codebase.
 
 Move a file and the import path changes. Move a folder and all of its consumers may need edits. A dependency from checkout to payments is encoded as `../../..`, which is technically precise and semantically useless.
 
-Relative paths make local file movement expensive and make architecture harder to read. They answer "how do I walk the directory tree from here?" when the code reviewer wants to know "which module does this depend on?"
+Relative paths make local file movement expensive and make architecture harder to read. They answer "how do I walk the directory tree from here?" when the reviewer wants to know "which module does this depend on?"
 
-So the useful target is not package names or relative paths. The useful target is absolute imports over the repository's source tree.
+So I do not think the choice is really package names versus relative paths. The nicer target is absolute imports over the repository's source tree.
 
 ## Use One Root Import Space
 
-For Node and TypeScript projects, the cleanest version is a single private root `package.json` with a [`package.json#imports`](https://nodejs.org/api/packages.html#imports) map. TypeScript supports these package imports in `node16`, `nodenext`, and `bundler` module resolution modes:
+For Node and TypeScript projects, the cleanest version I have found is a single private root `package.json` with a [`package.json#imports`](https://nodejs.org/api/packages.html#imports) map. TypeScript supports these package imports in `node16`, `nodenext`, and `bundler` module resolution modes:
 
 ```json
 {
@@ -111,13 +117,13 @@ import {calculateTax} from "#packages/payments/calculate-tax.js";
 import {formatMoney} from "#packages/core/money/format.js";
 ```
 
-This has a few nice properties.
+This buys a few things at once.
 
-The import path is stable when the importing file moves. The path describes the dependency. The resolver has one root map instead of one package manifest per internal folder. TypeScript, Node, tests, lint, and bundlers can share the same naming convention instead of each growing a slightly different alias system.
+The import path stays stable when the importing file moves. The path says what the dependency is, not how many `..` hops it takes to reach it. The resolver has one root map instead of one package manifest per internal folder. TypeScript, Node, tests, lint, and bundlers can share the same naming convention instead of each growing a slightly different alias system.
 
 It also matches how many other language ecosystems feel in practice. Go imports by module path plus directory. Rust code commonly uses crate-rooted paths like `crate::feature::module`. Python packages usually import from a package root instead of walking the tree from every file. Java and Kotlin package names are absolute namespaces.
 
-The important idea is not that JavaScript should become Go or Rust. It is that internal code should have a stable absolute address that corresponds to the source tree.
+The point is not that JavaScript should pretend to be Go or Rust. The point is simpler: internal code should have a stable absolute address that maps back to the source tree.
 
 ## Boundaries Are Not Resolution
 
@@ -125,7 +131,7 @@ The usual objection is:
 
 > If everyone can import any source file, how do we keep boundaries?
 
-That is the right question. But package names are a clumsy answer.
+That is the right question. Package names are just a clumsy answer.
 
 Resolution and visibility are different jobs. Absolute imports should tell tools where a file is. Boundary rules should tell developers whether that dependency is allowed.
 
@@ -142,7 +148,7 @@ packages/
     charge-card.ts
 ```
 
-These imports should be allowed:
+This import should be allowed:
 
 ```ts
 import {renderPriceBreakdown} from "#packages/checkout/internal/price-breakdown.js";
@@ -152,19 +158,19 @@ from code under `packages/checkout`.
 
 The same import should be rejected from `packages/payments`, `packages/search`, or an app that happens to know the file exists.
 
-That enforcement can live in lint rules, build-system visibility, dependency-cruiser, Nx module boundaries, a custom ESLint rule, Bazel visibility, or a small repository-specific checker. The rule needs to compare the importer path with the imported path. A simple string alias cannot do that.
+That enforcement can live in lint rules, build-system visibility, dependency-cruiser, Nx module boundaries, a custom ESLint rule, Bazel visibility, or a small repository-specific checker. The rule needs to compare the importer path with the imported path. A package alias cannot express that by itself.
 
-This is the important split:
+This split keeps the system honest:
 
 - Import maps make files addressable.
 - Boundary checks decide which addresses are allowed.
 - Package manifests describe artifacts that leave the repository.
 
-When those jobs are separate, each one gets simpler.
+When those jobs are separate, each one becomes easier to reason about.
 
-## package.json Is For Public Artifacts
+## package.json Is for Public Artifacts
 
-`package.json` is good at describing an npm package. That is its job.
+I am not arguing that `package.json` is bad. It is good at describing an npm package. That is its job.
 
 Use one when the code is consumed outside the monorepo:
 
@@ -192,9 +198,9 @@ In that world, `package.json` fields are real product surface:
 }
 ```
 
-That is a distribution contract. Consumers outside the repository should not know your source tree. They should know the public package name and the public subpaths you support.
+That is a real distribution contract. Consumers outside the repository should not know your source tree. They should know the public package name and the public subpaths you support.
 
-Internal code is different. If the only consumer is the same repository, a package manifest often becomes ceremony:
+Internal code is different. If the only consumer is the same repository, a package manifest often turns into ritual:
 
 - fake versions
 - fake package names
@@ -203,13 +209,13 @@ Internal code is different. If the only consumer is the same repository, a packa
 - generated `exports` fields for code that is never exported
 - package manager linking for code that could be resolved directly
 
-It is not that internal package manifests never work. It is that they are often solving the wrong problem.
+Internal package manifests can work. They are just often solving the wrong problem.
 
-## FormatJS Is A Useful Example
+## FormatJS Is a Useful Example
 
-The [FormatJS repository](https://github.com/formatjs/formatjs) is a good one to look at because it is both a real public library monorepo and a modern TypeScript codebase.
+The [FormatJS repository](https://github.com/formatjs/formatjs) is a nice example because it is both a real public library monorepo and a modern TypeScript codebase.
 
-The repository publishes real packages such as `@formatjs/intl`, `@formatjs/cli`, `@formatjs/icu-messageformat-parser`, `intl-messageformat`, and `react-intl`. Those packages deserve package manifests because people install them from outside the repo.
+The repository publishes real packages such as `@formatjs/intl`, `@formatjs/cli`, `@formatjs/icu-messageformat-parser`, `intl-messageformat`, and `react-intl`. Those packages deserve package manifests because people install them from outside the repo. They have names, versions, entrypoints, peer dependencies, and compatibility expectations.
 
 The interesting bit is that the [root package](https://github.com/formatjs/formatjs/blob/main/package.json) is private and defines an internal import map:
 
@@ -223,7 +229,7 @@ The interesting bit is that the [root package](https://github.com/formatjs/forma
 }
 ```
 
-That lets source files import by repository path:
+That lets source files import by repository path instead of inventing package names for every internal source boundary:
 
 ```ts
 import {type MessageDescriptor} from "#packages/intl/types.js";
@@ -281,13 +287,13 @@ Some tools make package manifests the only project discovery mechanism. That nud
 
 Better tooling lets packages be arbitrary source units. Bazel targets can do this. Custom TypeScript project generators can do this. Nx can do parts of this with project configuration and module boundary rules. A repo-specific lint or dependency checker can do this. The exact tool matters less than the capability.
 
-The common workflow should be:
+The workflow should feel more like this:
 
 ```text
 create folder -> add source -> add test target -> import by absolute path -> enforce boundaries
 ```
 
-not:
+and less like this:
 
 ```text
 create folder -> invent package name -> add package.json -> update workspace -> teach every tool how to resolve the fake package -> import through entrypoint -> fight barrels later
