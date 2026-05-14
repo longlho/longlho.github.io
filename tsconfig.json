@@ -7,6 +7,10 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "noUncheckedIndexedAccess": true,
+    "paths": {
+      "#app/*": ["./*"],
+      "#tools/*": ["./tools/*"]
+    },
     "strict": true,
     "target": "ES2022",
     "types": ["node"]

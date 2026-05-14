@@ -21,9 +21,11 @@ js_library(
     name = "site_sources",
     srcs = [
         "index.html",
+        "main.ts",
         "package.json",
+        "styles.css",
         "vite.config.ts",
-        "//src:site_sources",
+        "vite-env.d.ts",
         "//tools:post_renderer_source",
     ] + glob(
         [
@@ -74,11 +76,19 @@ gazelle_test(
 
 ts_library(
     name = "typecheck",
-    srcs = ["vite.config.ts"],
+    srcs = [
+        "main.ts",
+        "vite.config.ts",
+        "vite-env.d.ts",
+    ],
     tsconfig_types = ["node"],
     visibility = ["//visibility:public"],
     deps = [
+        "//:node_modules/@iconify/types",  # keep
+        "//:node_modules/@types/d3-selection",  # keep
         "//:node_modules/@types/node",
+        "//:node_modules/mermaid",
+        "//:node_modules/type-fest",  # keep
         "//:node_modules/vite",
     ],
 )
