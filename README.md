@@ -2,13 +2,12 @@
 
 Personal website for Long Ho, built as a static Vite site and deployed to GitHub Pages.
 
-Posts are authored as Markdown files in `posts/`. During `bazel build //:site`, the Markdown files are rendered into generated TypeScript data, direct-linkable static routes under `/posts/<slug>/`, and an RSS feed at `/feed.xml`.
+Posts are authored as Markdown files in `posts/`. Local development renders them through a Vite virtual module. During `bazel build //:site`, Bazel renders the deployable site, direct-linkable static routes under `/posts/<slug>/`, and an RSS feed at `/feed.xml` without checking generated post data into source control.
 
 ## Development
 
 ```bash
 pnpm install
-pnpm run render:posts
 pnpm run dev
 ```
 
@@ -19,3 +18,9 @@ bazel build //:site
 ```
 
 The deployable artifact is `bazel-bin/dist`. The site is deployed from the `main` branch through the GitHub Pages workflow in `.github/workflows/pages.yml`.
+
+## Production Preview
+
+```bash
+bazel run //:prod
+```

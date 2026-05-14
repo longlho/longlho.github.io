@@ -1,7 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("//:tools/ts.bzl", "ts_library")
-
-# gazelle:exclude generated
+load("//tools:ts.bzl", "ts_library")
 
 js_library(
     name = "site_sources",
@@ -16,7 +14,6 @@ js_library(
 ts_library(
     name = "typecheck",
     srcs = [
-        "generated/posts.ts",  # keep
         "main.ts",
         "vite-env.d.ts",
     ],

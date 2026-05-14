@@ -1,0 +1,71 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load(":ts.bzl", "ts_library")
+
+filegroup(
+    name = "post_renderer_file",
+    srcs = ["post-renderer.ts"],
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "post_renderer_source",
+    srcs = ["post-renderer.ts"],
+    visibility = ["//visibility:public"],
+)
+
+js_binary(
+    name = "build_site_bin",
+    data = [
+        ":post_renderer_source",  # keep
+        "//:node_modules/@types/node",
+        "//:node_modules/fast-xml-parser",
+        "//:node_modules/gray-matter",  # keep
+        "//:node_modules/marked",  # keep
+        "//:node_modules/mermaid",  # keep
+        "//:node_modules/vite",
+        "//:site_sources",  # keep
+    ],
+    entry_point = "bazel/build_site.ts",
+    node_options = ["--experimental-transform-types"],
+    visibility = ["//visibility:public"],
+)
+
+js_binary(
+    name = "prod",
+    data = [
+        "//:node_modules/@types/node",
+        "//:site",  # keep
+    ],
+    entry_point = "bazel/serve_site.ts",
+    node_options = ["--experimental-transform-types"],
+    visibility = ["//visibility:public"],
+)
+
+ts_library(
+    name = "typecheck",
+    srcs = ["post-renderer.ts"],
+    tsconfig_types = ["node"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:node_modules/@types/node",
+        "//:node_modules/gray-matter",
+        "//:node_modules/marked",
+    ],
+)
+
+ts_library(
+    name = "build_site_typecheck",
+    srcs = [
+        "bazel/build_site.ts",
+        "bazel/serve_site.ts",
+        "post-renderer.ts",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:node_modules/@types/node",
+        "//:node_modules/fast-xml-parser",
+        "//:node_modules/gray-matter",
+        "//:node_modules/marked",
+        "//:node_modules/vite",
+    ],
+)

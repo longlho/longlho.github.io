@@ -9,7 +9,7 @@ def ts_config(name, src, **kwargs):
         **kwargs
     )
 
-def ts_library(name, srcs, **kwargs):
+def ts_library(name, srcs, tsconfig_types = [], **kwargs):
     _ts_project(
         name = name,
         srcs = srcs,
