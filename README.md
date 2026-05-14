@@ -18,3 +18,9 @@ bazel build //:site
 ```
 
 The deployable artifact is `bazel-bin/dist`. The site is deployed from the `main` branch through the GitHub Pages workflow in `.github/workflows/pages.yml`.
+
+## Production Preview
+
+```bash
+bazel run //:prod
+```

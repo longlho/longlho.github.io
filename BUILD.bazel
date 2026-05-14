@@ -49,6 +49,11 @@ alias(
     actual = ":site",
 )
 
+alias(
+    name = "prod",
+    actual = "//tools:prod",
+)
+
 gazelle_binary(
     name = "gazelle_bin",
     languages = [

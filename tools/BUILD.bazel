@@ -30,6 +30,17 @@ js_binary(
     visibility = ["//visibility:public"],
 )
 
+js_binary(
+    name = "prod",
+    data = [
+        "//:node_modules/@types/node",
+        "//:site",  # keep
+    ],
+    entry_point = "bazel/serve_site.ts",
+    node_options = ["--experimental-transform-types"],
+    visibility = ["//visibility:public"],
+)
+
 ts_library(
     name = "typecheck",
     srcs = ["post-renderer.ts"],
@@ -46,6 +57,7 @@ ts_library(
     name = "build_site_typecheck",
     srcs = [
         "bazel/build_site.ts",
+        "bazel/serve_site.ts",
         "post-renderer.ts",
     ],
     visibility = ["//visibility:public"],
