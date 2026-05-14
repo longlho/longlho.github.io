@@ -40,6 +40,7 @@ const links = [
   { label: "GitHub", href: "https://github.com/longlho" },
   { label: "Writing", href: "/#writing" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/longlho" },
+  { label: "RSS", href: "/feed.xml" },
 ];
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -117,7 +118,6 @@ const renderFooter = () => `
     <p>Long Ho</p>
     <div>
       ${links
-        .slice(0, 3)
         .map((link) => `<a href="${link.href}" ${externalAttrs(link.href)}>${link.label}</a>`)
         .join("")}
     </div>

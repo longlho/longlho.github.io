@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { XMLBuilder } from "fast-xml-parser";
 import matter from "gray-matter";
 import { marked } from "marked";
 import * as ts from "typescript";
@@ -27,6 +28,45 @@ type Frontmatter = {
   slug?: unknown;
   summary?: unknown;
   title?: unknown;
+};
+
+type RssDocument = {
+  "?xml": {
+    "@_version": string;
+    "@_encoding": string;
+  };
+  rss: {
+    "@_version": string;
+    "@_xmlns:atom": string;
+    "@_xmlns:content": string;
+    channel: {
+      title: string;
+      link: string;
+      description: string;
+      language: string;
+      "atom:link": {
+        "@_href": string;
+        "@_rel": string;
+        "@_type": string;
+      };
+      lastBuildDate?: string;
+      item: RssItem[];
+    };
+  };
+};
+
+type RssItem = {
+  title: string;
+  link: string;
+  guid: {
+    "@_isPermaLink": string;
+    "#text": string;
+  };
+  pubDate?: string;
+  description: string;
+  "content:encoded": {
+    __cdata: string;
+  };
 };
 
 const languageAliases = new Map([
@@ -91,6 +131,17 @@ const languageKeywords: Record<string, string[]> = {
 
 languageKeywords.tsx = tsKeywords;
 
+const siteDescription = "Technical notes on frontend systems, build graphs, and product infrastructure.";
+const siteTitle = "Long Ho";
+const siteUrl = "https://longlho.github.io";
+const xmlBuilder = new XMLBuilder({
+  cdataPropName: "__cdata",
+  format: true,
+  ignoreAttributes: false,
+  suppressBooleanAttributes: false,
+  suppressEmptyNode: true,
+});
+
 const outputDir = process.argv[2] ? await resolveOutputDir(process.argv[2]) : "";
 
 if (!outputDir) {
@@ -125,7 +176,7 @@ await copyTree(packageRoot, workspaceDir, {
 
 await fs.rm(generatedDir, { force: true, recursive: true });
 await fs.mkdir(generatedDir, { recursive: true });
-await renderPosts(path.join(workspaceDir, "posts"), generatedDir);
+await renderPosts(path.join(workspaceDir, "posts"), generatedDir, path.join(workspaceDir, "public", "feed.xml"));
 await linkNodeModules(packageRoot, workspaceDir);
 
 const previousCwd = process.cwd();
@@ -241,7 +292,7 @@ async function linkNodeModules(sourceRoot: string, destinationRoot: string): Pro
   }
 }
 
-async function renderPosts(postsDir: string, generatedDir: string): Promise<void> {
+async function renderPosts(postsDir: string, generatedDir: string, feedPath: string): Promise<void> {
   const files = await collectMarkdownFiles(postsDir);
   const posts: RenderedPost[] = await Promise.all(
     files.map(async (filePath) => {
@@ -279,6 +330,8 @@ async function renderPosts(postsDir: string, generatedDir: string): Promise<void
     printPostsModule(posts),
   );
   await fs.writeFile(path.join(generatedDir, "post-slugs.json"), `${JSON.stringify(posts.map((post) => post.slug), null, 2)}\n`);
+  await fs.mkdir(path.dirname(feedPath), { recursive: true });
+  await fs.writeFile(feedPath, renderRssFeed(posts));
 }
 
 async function collectMarkdownFiles(dir: string): Promise<string[]> {
@@ -511,6 +564,62 @@ function getExcerpt(data: Frontmatter, html: string): string {
 
 function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
+
+function renderRssFeed(posts: RenderedPost[]): string {
+  const latestPostDate = posts.find((post) => post.date)?.date ?? "";
+  const channel: RssDocument["rss"]["channel"] = {
+    title: siteTitle,
+    link: siteUrl,
+    description: siteDescription,
+    language: "en",
+    "atom:link": {
+      "@_href": `${siteUrl}/feed.xml`,
+      "@_rel": "self",
+      "@_type": "application/rss+xml",
+    },
+    ...(latestPostDate ? { lastBuildDate: formatRssDate(latestPostDate) } : {}),
+    item: posts.map(createRssItem),
+  };
+
+  return `${xmlBuilder.build({
+    "?xml": {
+      "@_version": "1.0",
+      "@_encoding": "UTF-8",
+    },
+    rss: {
+      "@_version": "2.0",
+      "@_xmlns:atom": "http://www.w3.org/2005/Atom",
+      "@_xmlns:content": "http://purl.org/rss/1.0/modules/content/",
+      channel,
+    },
+  } satisfies RssDocument)}\n`;
+}
+
+function createRssItem(post: RenderedPost): RssItem {
+  const postUrl = `${siteUrl}/posts/${post.slug}/`;
+  const item: RssItem = {
+    title: post.title,
+    link: postUrl,
+    guid: {
+      "@_isPermaLink": "true",
+      "#text": postUrl,
+    },
+    description: post.excerpt,
+    "content:encoded": {
+      __cdata: post.html,
+    },
+  };
+
+  if (post.date) {
+    item.pubDate = formatRssDate(post.date);
+  }
+
+  return item;
+}
+
+function formatRssDate(date: string): string {
+  return new Date(date).toUTCString();
 }
 
 function slugify(value: string): string {

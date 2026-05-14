@@ -2,7 +2,7 @@
 
 Personal website for Long Ho, built as a static Vite site and deployed to GitHub Pages.
 
-Posts are authored as Markdown files in `posts/`. During `bazel build //:site`, the Markdown files are rendered into generated TypeScript data and direct-linkable static routes under `/posts/<slug>/`.
+Posts are authored as Markdown files in `posts/`. During `bazel build //:site`, the Markdown files are rendered into generated TypeScript data, direct-linkable static routes under `/posts/<slug>/`, and an RSS feed at `/feed.xml`.
 
 ## Development
 

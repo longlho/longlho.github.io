@@ -30,6 +30,7 @@ filegroup(
             "public/**",
         ],
         allow_empty = True,
+        exclude = ["public/feed.xml"],
     ),
 )
 
@@ -38,6 +39,7 @@ js_binary(
     data = [
         ":site_sources",  # keep
         "//:node_modules/@types/node",  # keep
+        "//:node_modules/fast-xml-parser",  # keep
         "//:node_modules/gray-matter",  # keep
         "//:node_modules/marked",  # keep
         "//:node_modules/mermaid",  # keep
@@ -96,6 +98,7 @@ ts_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",  # keep
+        "//:node_modules/fast-xml-parser",  # keep
         "//:node_modules/gray-matter",  # keep
         "//:node_modules/marked",  # keep
         "//:node_modules/typescript",  # keep
