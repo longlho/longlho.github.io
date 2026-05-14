@@ -32,6 +32,7 @@ js_binary(
 ts_library(
     name = "typecheck",
     srcs = ["post-renderer.ts"],
+    tsconfig_types = ["node"],
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",

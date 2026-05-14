@@ -70,6 +70,7 @@ gazelle_test(
 ts_library(
     name = "typecheck",
     srcs = ["vite.config.ts"],
+    tsconfig_types = ["node"],
     visibility = ["//visibility:public"],
     deps = [
         "//:node_modules/@types/node",  # keep
