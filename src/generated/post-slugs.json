@@ -1,4 +1,5 @@
 [
+  "a-package-is-a-distribution-boundary",
   "a-cross-platform-web-runtime-is-a-product-boundary",
   "rsc-server-functions-are-not-an-api-boundary",
   "part-1-why-bazel-for-large-frontend-monorepos",
