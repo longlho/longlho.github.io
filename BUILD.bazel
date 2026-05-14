@@ -73,7 +73,7 @@ ts_library(
     tsconfig_types = ["node"],
     visibility = ["//visibility:public"],
     deps = [
-        "//:node_modules/@types/node",  # keep
+        "//:node_modules/@types/node",
         "//:node_modules/vite",
     ],
 )

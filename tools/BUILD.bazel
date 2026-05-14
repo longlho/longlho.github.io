@@ -16,12 +16,13 @@ js_library(
 js_binary(
     name = "build_site_bin",
     data = [
-        "//:node_modules/@types/node",  # keep
-        "//:node_modules/fast-xml-parser",  # keep
+        ":post_renderer_source",  # keep
+        "//:node_modules/@types/node",
+        "//:node_modules/fast-xml-parser",
         "//:node_modules/gray-matter",  # keep
         "//:node_modules/marked",  # keep
         "//:node_modules/mermaid",  # keep
-        "//:node_modules/vite",  # keep
+        "//:node_modules/vite",
         "//:site_sources",  # keep
     ],
     entry_point = "bazel/build_site.ts",
