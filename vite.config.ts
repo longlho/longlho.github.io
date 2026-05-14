@@ -3,7 +3,9 @@ import { pathToFileURL } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 
 const root = process.cwd();
-const postRendererUrl = pathToFileURL(path.join(root, "tools", "post-renderer.ts")).href;
+const postRendererUrl =
+  import.meta.resolve?.("#tools/post-renderer.ts") ??
+  pathToFileURL(path.join(root, "tools", "post-renderer.ts")).href;
 const virtualPostsModuleId = "virtual:posts";
 const resolvedVirtualPostsModuleId = `\0${virtualPostsModuleId}`;
 
@@ -25,7 +27,9 @@ function postsPlugin(): Plugin {
         return;
       }
 
-      const { printPostsJavaScriptModule, renderPostsFromDir } = (await import(postRendererUrl)) as PostRenderer;
+      const { printPostsJavaScriptModule, renderPostsFromDir } = (await import(
+        postRendererUrl
+      )) as PostRenderer;
       return printPostsJavaScriptModule(await renderPostsFromDir(path.join(root, "posts")));
     },
     handleHotUpdate({ file, server }) {
@@ -47,6 +51,11 @@ function postsPlugin(): Plugin {
 export default defineConfig({
   base: "/",
   plugins: [postsPlugin()],
+  resolve: {
+    alias: {
+      "#/": `${root}/`,
+    },
+  },
   server: {
     watch: {
       ignored: ["**/bazel-*/**", "**/bazel-bin/**", "**/bazel-out/**", "**/bazel-testlogs/**"],

@@ -5,6 +5,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#tools/*": "./tools/*"
+  },
   "packageManager": "pnpm@10.33.4",
   "homepage": "https://longlho.github.io",
   "repository": {
