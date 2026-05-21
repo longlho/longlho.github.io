@@ -69,11 +69,11 @@ The healthier version looks more like this:
 
 ```mermaid
 flowchart TD
-  source["Application source"] --> graph["Build graph"]
-  graph --> generated["Generated app structure"]
-  graph --> checks["Static checks"]
-  graph --> bundles["Runtime bundles"]
-  graph --> docs["Generated maps"]
+  source["Application source"] --> buildGraph["Build graph"]
+  buildGraph --> generated["Generated app structure"]
+  buildGraph --> checks["Static checks"]
+  buildGraph --> bundles["Runtime bundles"]
+  buildGraph --> docs["Generated maps"]
 
   generated --> app["Owned application code"]
   checks --> app
@@ -109,7 +109,7 @@ That objection is weaker now. Agents and generators are good at boring code. The
 flowchart LR
   intent["Developer intent"] --> agent["Agent or generator"]
   repo["Repo conventions"] --> agent
-  graph["Build graph"] --> agent
+  buildGraph["Build graph"] --> agent
   agent --> files["Concrete files"]
   files --> review["Human review"]
   review --> app["Owned app structure"]
