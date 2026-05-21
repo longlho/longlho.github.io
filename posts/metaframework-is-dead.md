@@ -14,7 +14,9 @@ That helped.
 
 But the more the framework owns, the more the actual shape of the product disappears into runtime behavior, compiler transforms, generated manifests, and deployment adapter rules. At some point the app is not simpler. It is just harder to see.
 
-The next useful move is not a bigger runtime. It is moving more work to build time, and letting generators and agents produce explicit code that teams can own.
+The thing that changes the tradeoff now is AI agents.
+
+Codex, Claude Code, and similar tools are good at producing explicit scaffolding. They can create the route, register it, wire the test, update the manifest, and follow the repo's local patterns. That makes the next useful move less about hiding structure behind another runtime abstraction, and more about generating clear code that teams can own.
 
 ## The Old Deal
 
@@ -86,6 +88,16 @@ The framework can still be powerful, but it is no longer the box the product liv
 
 That visibility matters. Reviewers can read a diff. Tests can point at concrete files. Boundary rules can run before deploy. A future teammate can inspect the route map or API contract without learning a pile of runtime inference rules first.
 
+## Agents Change The Cost Model
+
+This is the part that feels different from five years ago.
+
+The old reason to prefer deep framework abstraction was that explicit structure was expensive. Nobody wanted to write the boring glue. So the framework hid it.
+
+AI agents make that bargain less compelling. Codex or Claude Code can handle the glue. They can look at the repo, copy the local convention, add the obvious files, and adjust the nearby tests.
+
+That does not mean the agent should create more magic. It means the agent can afford to create more ordinary code.
+
 ## Verbose Scaffolding Is Back
 
 We spent years treating boilerplate as the enemy.
@@ -103,11 +115,11 @@ I would rather have:
 
 The old objection was fair: explicit code costs time.
 
-That objection is weaker now. Agents and generators are good at boring code. They can create the route, wire the test, update the manifest, follow local naming conventions, and leave behind ordinary files.
+That objection is weaker now. Agents and generators are good at boring code. They can leave behind ordinary files instead of another layer of framework indirection.
 
 ```mermaid
 flowchart LR
-  intent["Developer intent"] --> agent["Agent or generator"]
+  intent["Developer intent"] --> agent["AI agent or generator"]
   repo["Repo conventions"] --> agent
   buildGraph["Build graph"] --> agent
   agent --> files["Concrete files"]
@@ -156,8 +168,8 @@ The metaframework is dead as the central abstraction.
 
 Not because routing, rendering, dev servers, or deployment adapters stopped mattering. They still matter a lot.
 
-But the next jump is not another layer of runtime cleverness. It is build-time generation plus explicit ownership.
+But the next jump is not another layer of runtime cleverness. It is build-time generation plus explicit ownership, with AI agents handling the scaffolding work that used to make explicit architecture feel too expensive.
 
-Use the framework to compile, optimize, and serve. Use the build graph to make the product shape concrete. Use agents to create the boring structure. Keep the important boundaries visible.
+Use the framework to compile, optimize, and serve. Use the build graph to make the product shape concrete. Use agents like Codex and Claude Code to create the boring structure. Keep the important boundaries visible.
 
 Start with the code you would want after the abstraction leaks, and let the tools help you keep it boring.
