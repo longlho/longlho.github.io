@@ -26,15 +26,6 @@ That code looks harmless until `flags` changes and the memoized value does not. 
 
 The bug is usually not dramatic. It is quieter than that.
 
-```mermaid
-flowchart LR
-  render["Render"] --> deps["Dependency list"]
-  deps --> cache["Memo cache"]
-  cache --> child["Child props"]
-  cache --> effect["Effect dependency"]
-  missing["Missing dependency"] -. "stale value" .-> cache
-```
-
 The common response is "that is exactly why React Compiler exists." Instead of humans manually wrapping things, the compiler can decide what to cache.
 
 That is better than blindly adding `useMemo` everywhere.
@@ -42,17 +33,6 @@ That is better than blindly adding `useMemo` everywhere.
 But it does not remove the semantic issue. It moves the issue into a generated layer.
 
 The compiler still has to decide which values should keep identity, which values should be recomputed, and which expressions are safe to treat as pure. If the source code is clean React code, that can work. If the code leans on mutation, render-time side effects, unstable object identity, or third-party hooks with weird behavior, the compiler either has to bail out or produce code whose behavior is harder for a human to reason about.
-
-```mermaid
-flowchart TD
-  source["Component source"] --> analysis["Compiler analysis"]
-  analysis --> pure["Proved safe"]
-  analysis --> uncertain["Not proved safe"]
-  pure --> generated["Generated memoization"]
-  uncertain --> bailout["Skip or require opt-out"]
-  generated --> runtime["Runtime behavior"]
-  bailout --> runtime
-```
 
 That is the awkward part. React Compiler is marketed as getting rid of manual memoization, but the underlying model still depends on memoization being valid. The cache moved. The tradeoff did not disappear.
 
@@ -66,43 +46,13 @@ It is not the only one.
 
 If the compiler adds cache slots, guards, temporaries, helper calls, or more generated control flow across a large app, that cost shows up in the JavaScript payload. More JavaScript means more bytes to download, parse, compile, and execute before the user can interact with the page.
 
-```mermaid
-flowchart LR
-  source["Small source component"] --> compiler["React Compiler"]
-  compiler --> output["Larger generated component"]
-  output --> bundle["Client bundle"]
-  bundle --> browser["Download, parse, execute"]
-  browser --> updates["Faster updates sometimes"]
-```
-
 That can still be a good trade. A dense app with expensive update paths may gladly pay a few more bytes to avoid repeated work. A dashboard with stable shell UI and expensive tables may benefit. A component library with careful rollout might benefit.
 
 But it is not automatically a win.
 
+In our monorepo, turning it on bumps the bundle size by close to 20%. That is not a rounding error.
+
 For many product surfaces, the performance budget is already dominated by JavaScript delivery and hydration. If the compiler makes every route slightly heavier to make some interactions cheaper, that is not free optimization. It is moving cost from update time to load time.
-
-The practical question should be boring:
-
-- how much did each route chunk grow?
-- how much did parse and execute time move?
-- which interactions got faster?
-- did hydration get better or worse?
-- did the generated code affect source-map size and debugging?
-- are the wins concentrated in known hot paths or sprayed across the app?
-
-If the answer is "we enabled it globally and Lighthouse looked fine," that is not enough.
-
-```mermaid
-flowchart TD
-  change["Enable compiler"] --> size["Bundle size diff"]
-  change --> startup["Startup cost"]
-  change --> interaction["Interaction traces"]
-  change --> correctness["Behavioral tests"]
-  size --> decision["Keep, narrow, or revert"]
-  startup --> decision
-  interaction --> decision
-  correctness --> decision
-```
 
 React Compiler may improve one performance budget while spending another. That is a trade, not a magic refund.
 
