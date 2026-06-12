@@ -75,15 +75,6 @@ React already has a massive ecosystem built around plain JavaScript components, 
 
 So React Compiler has to work around the existing contract.
 
-```mermaid
-flowchart LR
-  runtime["Existing React runtime"] --> ecosystem["Existing ecosystem"]
-  ecosystem --> patterns["Existing app patterns"]
-  patterns --> compiler["Compiler inference"]
-  compiler --> guards["Guards, bailouts, directives"]
-  guards --> app["Compiled app"]
-```
-
 That shape has a cost. The compiler cannot freely say, "the model is changing, update your code." It has to preserve the old mental model while recovering enough structure to optimize it.
 
 That is why the rollout story needs directives, gating, compatibility targets, lints, panic thresholds, and escape hatches. Those are reasonable tools. They are also evidence that the compiler is negotiating with an API it did not get to design.
@@ -99,15 +90,6 @@ React's core model makes rendering look like calling functions. Components run, 
 The compiler tries to make that cheaper.
 
 But a lot of the pain comes from the model itself: too much reactive intent is implicit. A value is recreated because JavaScript does that. A callback changes identity because closures do that. An effect reruns because a dependency changed identity. A child rerenders because its parent rerendered. Then the compiler comes in later and tries to prove which of those things did not matter.
-
-```mermaid
-flowchart TD
-  model["Render reruns ordinary JS"] --> churn["Identity churn"]
-  churn --> memo["Manual memoization"]
-  churn --> compiler["Compiler memoization"]
-  memo --> bugs["Stale values and dependency bugs"]
-  compiler --> complexity["Generated caches and bailouts"]
-```
 
 Svelte and Solid start from a more explicit reactive contract. They know which values are reactive because the model says so. React Compiler has to discover that after the fact.
 
