@@ -101,6 +101,10 @@ It does mean the approach feels like paying down a design debt with generated co
 
 I would not treat React Compiler as a default switch for a large app.
 
+I would trust it more as a linter: let it surface places where identity churn or missed memoization matters, then have an agent or human make the change and verify the diff.
+
+That is why the [OXC React Compiler plugin work](https://github.com/oxc-project/oxc/issues/10048#issuecomment-4043223690) is interesting to me. A fast lint-shaped pass feels like a healthier adoption path than turning on global compilation and hoping the generated code is right.
+
 I would trust it under a narrower contract:
 
 - enable it where profiling shows update work is the bottleneck
@@ -131,3 +135,4 @@ Use it where the numbers say it helps. Do not pretend it makes memoization disap
 - [React Compiler introduction](https://react.dev/learn/react-compiler/introduction)
 - [React Compiler configuration](https://react.dev/reference/react-compiler/configuration)
 - [React Compiler directives](https://react.dev/reference/react-compiler/directives)
+- [OXC React Compiler plugin discussion](https://github.com/oxc-project/oxc/issues/10048#issuecomment-4043223690)
