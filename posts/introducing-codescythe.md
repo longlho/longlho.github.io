@@ -39,29 +39,39 @@ The graph understands static imports, re-exports, string-literal dynamic imports
 
 Codescythe is written in Rust, parses with Oxc, and walks reachable graph frontiers in parallel. On our pinned Kibana fixture it analyzes 90,931 files in 13.61 seconds, compared with 43.04 seconds for Knip. Codescythe solves a smaller problem; speed is one benefit of keeping it small.
 
-## Show Me The Path
+## Query The Graph
 
-The most useful question is often not “is this file alive?” but “what keeps it alive?”
+The most useful question is often not “is this file alive?” but “what keeps it alive?” Codescythe exposes its analysis graph through `query`, so the answer is inspectable instead of buried inside the dead-code report.
 
-`query somepath` returns one shortest path between files, directories, or individual exports:
+- `somepath` finds one shortest route to each matching target.
+- `allpaths` returns every node and edge on any route between two selectors.
+- `import-conflicts` finds modules reached through both static and dynamic paths.
+
+Selectors can be files, directories, or individual exports. Edge labels distinguish named, side-effect, dynamic, and glob imports, re-exports, namespace access, and export definitions.
+
+For example, this asks for every path from `index.ts` to the `y` export:
 
 ```sh
-npx codescythe query somepath \
-  src/main.ts \
-  src/module.ts:used \
+npx codescythe query allpaths \
+  index.ts \
+  my-namespace.ts:y \
   --output mermaid
 ```
 
-The output comes from the same graph used for dead-code analysis:
+Codescythe renders the result directly from the same graph used for dead-code analysis:
 
 ```mermaid
 flowchart LR
-  n0["src/module.ts:used"]
-  n1["src/main.ts"]
-  n1 -->|"named import ./module:used"| n0
+  n0["index.ts"]
+  n1["my-module.ts"]
+  n2["my-module.ts:myExport"]
+  n3["my-namespace.ts:y"]
+  n2 -->|"defined in file myExport"| n1
+  n0 -->|"named import ./my-module.js:myExport"| n2
+  n1 -->|"namespace member ./my-namespace.js:y"| n3
 ```
 
-`query allpaths` returns the full subgraph between two selectors. Both commands support text, JSON, Mermaid, and SVG, so the result works in a terminal, a CI artifact, a PR description, or an agent workflow.
+Now the dependency is concrete: `index.ts` imports `myExport`, which reaches `y` through a namespace member access. The same query supports text, JSON, and SVG. JSON keeps stable node IDs and typed edges, which lets an agent inspect the path or attach the graph to a cleanup PR without parsing terminal prose.
 
 ## Check The Analysis Before The Fix
 
