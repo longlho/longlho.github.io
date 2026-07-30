@@ -52,9 +52,9 @@ Less inference gives the analyzer less magic to get wrong.
 ```mermaid
 flowchart LR
   config["Explicit entries and project scope"] --> resolve["Oxc parsing and module resolution"]
-  resolve --> graph["File and export graph"]
-  graph --> findings["Unused files, exports, unresolved imports"]
-  graph --> evidence["Explanations and dependency paths"]
+  resolve --> sourceGraph["File and export graph"]
+  sourceGraph --> findings["Unused files, exports, unresolved imports"]
+  sourceGraph --> evidence["Explanations and dependency paths"]
   findings --> fix["Supported removals"]
   evidence --> trust["Reviewable evidence"]
   trust --> fix
